@@ -1,3 +1,45 @@
+BOWSIE v1.10
+---
+### Features
+___OW Revolution___
+- The Map16 handler can now generate regular sprite Map16 data.
+
+___Non-OW Revolution___
+- __Katrina__: this system actually works now LOL
+
+
+BOWSIE v1.10 RELEASE CANDIDATE 1
+---
+### Features
+- The tool now pauses after an error or when sprites insert successfully... [Turns out regular people run BOWSIE from outside the console just like they'd do PIXI huh](https://i.kym-cdn.com/photos/images/original/002/086/808/90f.gif)
+
+___OW Revolution___
+- Upgraded to Overworld Revolution v1.1.1.
+- `slots` can now be up to 32 when using `owrev`, without needing to disable RAM checks.
+  - Due to this, some tables have moved RAM address locations.
+- `owrev` now inserts its main handler at the pointer located at `$0480D2` instead of overwriting OW Revolution code.
+- `owrev` now hacks `$02A861` directly for sprite load instead of overwriting OW Revolution code.
+- Added the sprite table `!ow_sprite_props`, corresponding to OW Revolution's `!RAM_SMW_OWSpr_Properties`. It's used to know when to process an sprite even if it's offscreen. Due to overworld map sizes, it's pretty necessary.
+  - Updated `%sub_offscreen()` to account for this fact.
+- Removed BOWSIE pointers for previously overwritten functions.
+- The bank 4 freespace finder now stops if we reach BOWSIE's default area. This is done in advance of potential future OW Revolution upgrades, as to know when to update the `JSR : NOP` to an `autoclean JSL`.
+- Special thanks to yoshifanatic for all his support to make this update possible. 😃
+
+Overworld Revolution support can now be considered mature.
+
+___Non-OW Revolution___
+- __Katrina__: added `!bowsie_contiguous` so the user can tell when a sprite is using contiguous sprite tables, like Katrina's system does.
+  - Updated `%spawn_sprite()` to account for this fact.
+
+The following features apply to both VLDC9 and Katrina's systems.
+- Separated the main sprite handler into its own separate function.
+- Sprites now appear during fade-in instead of awkwardly appearing out of nowhere.
+### Fixes
+- __OW Revolution__: now the extension bytes are set for all 256 sprites with extra bit 1, instead of just the first hundred. Oops!
+- __VLDC9/Katrina__: fixed RAM addresses not clearing on level load. This was very noticeable with, eg. Yoshi spawning turning around.
+- Changed `warnpc` to `assert pc()` and removed `math pri off`, in advance of Asar 2.0.
+- Fixed an issue where BOWSIE couldn't find the ASM and sprite directory when calling the tool using relative paths.
+
 BOWSIE v1.03
 ---
 ### Features

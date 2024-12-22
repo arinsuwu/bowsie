@@ -16,22 +16,25 @@
 
 padbyte $EA
 
-org $009AA4         ; nuke jump to original ow sprite load (always, even if kept. boy slow down running this bs routine...)
+org $009AA4         ;   nuke jump to original ow sprite load (always, even if kept. boy slow down running this bs routine...)
     BRA $02 : NOP #2
 
-org $04840D         ; swap the order in which the player is drawn and the sprites are processed
+org $04840D         ;   swap the order in which the player is drawn and the sprites are processed
     JSR $862E
     JSR $F708
 org $04827E
     JMP $840D
 
-org $00A165         ; jump to new ow sprite load (this one will run in gamemode $0C)
+org $0091CA         ;   these addresses aren't cleared in the vanilla game, but we use them, so let's clear this
+    JSL prepare_clear_ram
+
+org $00A165         ;   jump to new ow sprite load (this one will run in gamemode $0C)
     if (!bowsie_replace_original|!bowsie_omtre) == 0
         autoclean JML custom_ow_sprite_load_gm
     else
         JML custom_ow_sprite_load_gm
     endif
-org $04DBA3         ; jump to new ow sprite load (this one will run in map transitions)
+org $04DBA3         ;   jump to new ow sprite load (this one will run in map transitions)
     if (!bowsie_replace_original|!bowsie_omtre) == 0
         JML custom_ow_sprite_load_sm
     else
@@ -39,7 +42,7 @@ org $04DBA3         ; jump to new ow sprite load (this one will run in map trans
     endif
 
 if !bowsie_replace_original == 1
-    org $04F675     ; nuke original ow sprite load (which runs in gamemode $05)
+    org $04F675     ;   nuke original ow sprite load (which runs in gamemode $05)
         pad $04F6F8
 endif
 
@@ -78,6 +81,7 @@ custom_ow_sprite_load_main:
     ADC [$6B],y                 ; |
     STA $6B                     ;/
 
+    CLC
     LDY #$00                    ; loop counter = 0
 .sprite_load_loop               ; loop for decoding sprite data and spawning sprite.
     LDA [$6B],y                 ;\  get first word of sprite data (yyyx xxxx  xnnn nnnn)
@@ -87,7 +91,7 @@ custom_ow_sprite_load_main:
     LDA [$6B],y                 ; |
     AND #$1F80                  ; | mask out x bits: ---xxxxx x-------
     XBA                         ; | swap bytes in A: x------- ---xxxXX
-    ASL
+    ASL                         ; |
     ROL                         ; | rotate left:     -------- --xxxxxx
     ASL #2                      ; | multiple by 8 because x is in 8x8 blocks, not pixels.
     STA $02                     ;/  store x position (in pixels) in $02
@@ -152,6 +156,22 @@ else
 endif
 ; OPSE doesn't create enough freespace :/ 53 more bytes...
 run_ow_sprite:
+if !bowsie_replace_original == 0 && !bowsie_omtre == 1
+    JSR .main
+    LDA #$F7
+    JMP $F882
+elseif !bowsie_replace_original == 0
+    JSR .main
+    LDA #$04
+    PHA
+    PEA $F70C
+    PEA $8413
+    LDA #$F7
+    JML $04F882|!bank
+endif
+
+; Main handler
+run_ow_sprite_main:
     PHB
     REP #$21
     LDA #!oam_start
@@ -167,54 +187,44 @@ run_ow_sprite:
     if !bowsie_replace_original == 0 && !bowsie_omtre == 1
         JSL execute_ow_sprite_init
     else
-        JSR execute_ow_sprite_init  ;\  Or, in case !ow_sprite_init,x is still zero,
-    endif                           ; |
+        JSR execute_ow_sprite_init  ;\
+    endif                           ; | Or, in case !ow_sprite_init,x is still zero,
     INC !ow_sprite_init,x           ; | call execute_ow_sprite_init and then INC it.
-    BRA .no_sprite                  ; |
-+                                   ; |
+    BRA .no_sprite                  ;/
++
     if !bowsie_replace_original == 0 && !bowsie_omtre == 1
         JSL execute_ow_sprite
     else
-        JSR execute_ow_sprite       ; |
-    endif                           ; |
-.no_sprite                          ; |
-    DEX #2                          ; |
-    BPL -                           ;/
+        JSR execute_ow_sprite
+    endif
+.no_sprite
+    DEX #2
+    BPL -
 
     SEP #$20
     PLB
-if !bowsie_replace_original == 0 && !bowsie_omtre == 1
-    LDA #$F7
-    JMP $F882
-elseif !bowsie_replace_original == 1
 return:
     RTS
-else
-    LDA #$04
-    PHA
-    PEA $F70C
-    PEA $8413
-    LDA #$F7
-    JML $04F882|!bank
-endif
- 
+
 custom_ow_sprite_load:
 .gm
     if !bowsie_replace_original == 0
         JSL $04F675|!bank
     endif
     JSR custom_ow_sprite_load_main
+    JSR run_ow_sprite_main
+    JSR run_ow_sprite_main
     JSL $04D6E9|!bank
     JML $00A169|!bank
 .sm
+    JSL clear_ram
     PHX
     if !bowsie_replace_original == 0
-        JSL clear_ram
         JSL $04F675|!bank
-    else
-        JSR clear_ram
     endif
     JSR custom_ow_sprite_load_main
+    JSR run_ow_sprite_main
+    JSR run_ow_sprite_main
     PLX
     LDA $1F11|!addr,x
     if (!bowsie_replace_original|!bowsie_omtre) == 1
@@ -225,16 +235,16 @@ custom_ow_sprite_load:
     endif
 
 if !bowsie_replace_original == 0 && !bowsie_omtre == 1
-    warnpc $048D74|!bank
+    assert pc() <= $048D74|!bank
 
     freecode
 endif
 
 ;--------------------------------------------------------------------------------
-; Routine that calls the ow-sprites main function
+; Routine that calls an OW sprite's main function
 ; Also reduces the sprite's timers by 1.
-; Input: X                      = sprite index
-;          !ow_sprite_num,x  = sprite number    
+; Input:                X = sprite index
+;        !ow_sprite_num,x = sprite number    
 ;--------------------------------------------------------------------------------
 execute_ow_sprite:
     STX !ow_sprite_index
@@ -275,15 +285,11 @@ if (!bowsie_replace_original|!bowsie_omtre) == 0
     PEA.w return-1                  ;/ workaround for JSL [$0000]
 endif
     JML.w [!dp]
-if (!bowsie_replace_original|!bowsie_omtre) == 0
-    return:
-        RTS
-endif
+
 ;--------------------------------------------------------------------------------
-; Routine that calls the ow-sprites init function
-; Also reduces the sprite's timers by 1.
-; Input: X                      = sprite index
-;          !ow_sprite_num,x  = sprite number    
+; Routine that calls an OW sprite's init function
+; Input:                X = sprite index
+;        !ow_sprite_num,x = sprite number    
 ;--------------------------------------------------------------------------------
 execute_ow_sprite_init:
     STX !ow_sprite_index
@@ -317,18 +323,19 @@ endif
 
 ;---
 
-math pri off
-
+; Clear RAM used in OW sprites, either in submap transitions or on level load
+prepare_clear_ram:
+    STA $00
+    STZ $01
 clear_ram:
+    PHX
     REP #$30
-    LDX.w #!bowsie_ow_slots*2*21+4
+    LDX.w #(!bowsie_ow_slots*2*21)+4
 -   STZ !ow_sprite_num,x
     DEX #2
     BPL -
     SEP #$30
-if !bowsie_replace_original == 1
-    RTS
-else
+    PLX
     RTL
-endif
+
 

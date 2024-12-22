@@ -3,7 +3,7 @@ import rapidjson;
 import asar;
 
 #define VERSION 1
-#define SUBVER 3
+#define SUBVER 10
 
 using namespace std;
 using namespace rapidjson;
@@ -22,6 +22,12 @@ using namespace asar;
 template<class... Args> int error(const format_string<Args...> msg, Args &&... args)
 {
     print(cerr, "ERROR: {}",format(msg, args...));
+    #if defined(_WIN32)
+        system("pause");
+    #else
+        printf("Press Enter to continue");
+        getchar();
+    #endif
     return 1;
 }
 
@@ -789,18 +795,39 @@ int main(int argc, char *argv[])
     if(!settings.deserialize_json(&settings_json, &settings_err))
         return error("A problem occurred while parsing specific settings. Details:\n{}", settings_err);
 
+    // OW Revolution check
+    bool ow_rev = false;
+    if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
+    {
+        ow_rev = true;
+        if(settings.verbose)
+            println("Overworld Revolution detected.\nWARNING: Support is experimental!\n");
+    }
+
     /*
         Verify settings
     */
     if(settings.slots==0)
         return error("Can't have zero slots. It makes no sense.");
-    else if(settings.slots>24 && !(settings.bypass_ram_check))
-        return error("Can't have more than 24 slots due to memory limitations.");
-    else if( settings.bypass_ram_check && settings.method!="custom" && settings.slots>255 )
+    if(!ow_rev)
+        if(settings.slots>24 && !(settings.bypass_ram_check))
+            return error("Can't have more than 24 slots due to memory limitations.");
+    else
+        if(settings.slots>32 && !(settings.bypass_ram_check))
+            return error("Can't have more than 32 slots due to memory limitations.");
+    if( settings.bypass_ram_check && settings.method!="custom" && settings.slots>255 )
         return error("Can't have more than 255 slots without a custom insertion handler.");
-
     if(settings.method!="vldc9" && settings.method!="katrina" &&  settings.method!="owrev" && settings.method!="custom")
         return error("Unknown insertion method: {}", settings.method);
+
+    // Misc ROM checks
+    // The OW save check is just customary. I'm sure it isn't needed, but hey, better safe than sorry.
+    if(rom.rom_size<0x100000)
+        return error("This ROM is clean. Please edit it in Lunar Magic.");
+    if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
+        return error("Title mismatch. Is this ROM headered?");
+    if(rom.read<1>(0x049549)!=0x22 && !ow_rev)
+        return error("Please save the overworld at least once in Lunar Magic.");
 
     if(settings.verbose)
     {
@@ -822,25 +849,7 @@ int main(int argc, char *argv[])
     string tool_folder = filesystem::absolute(argv[0]).parent_path().string()+"/";
     string rom_name = filesystem::absolute(rom.rom_path).parent_path().string()+"/"+filesystem::path(rom.rom_path).stem().string();
 
-    // OW Revolution check
-    bool ow_rev = false;
-    if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
-    {
-        ow_rev = true;
-        if(settings.verbose)
-            println("Overworld Revolution detected.\nWARNING: Support is experimental!\n");
-    }
-
-    // Misc ROM checks
-    // The OW save check is just customary. I'm sure it isn't needed, but hey, better safe than sorry.
-    if(rom.rom_size<0x100000)
-        return error("This ROM is clean. Please edit it in Lunar Magic.");
-    if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
-        return error("Title mismatch. Is this ROM headered?");
-    if(rom.read<1>(0x049549)!=0x22 && !ow_rev)
-        return error("Please save the overworld at least once in Lunar Magic.");
-
-    string full_patch(format("incsrc \"asm/{}_defines.asm\"\nincsrc \"asm/macro.asm\"\n\n", settings.method));
+    string full_patch(format("incsrc \"{1}/asm/{0}_defines.asm\"\nincsrc \"{1}/asm/macro.asm\"\n\n", settings.method, tool_folder));
     {
         string tmp;
         // Insert the method
@@ -905,7 +914,7 @@ int main(int argc, char *argv[])
 !bowsie_omtre = {}\n\
 !bowsie_version = {}\n\
 !bowsie_subversion = {}\n\n\
-!map_offsets = read3($0EF55D)\n\n\
+!bowsie_contiguous = {}\n\n\
 !sa1 = 0\n\
 !dp = $0000\n\
 !addr = $0000\n\
@@ -920,26 +929,27 @@ endif\n\n\
 !bowsie_owrev = 0\n\
 if read4($048000) == $524F4659\n\
     !bowsie_owrev = 1\n\
-endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_detect ? '1' : '0', VERSION, SUBVER));
+endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_detect ? '1' : '0', VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
+
     /*
         these loops locate where certain code is inserted by overworld revolution.
         since the patch has many variables, these hijack spots are NEVER fixed.
     */
-    const int owrev_draw_player_routine = (rom.read<1>(0x04811C)<<16)|(rom.read<1>(0x04811B)<<8)|(rom.read<1>(0x04811A));
     if(ow_rev)
     {
         // Freespace
         for(int i=0;;++i)
         {
-            if(rom.read<4>(0x04ACD0+i)==0x00000000)
+            if(rom.read<4>(0x04ACD0+i)==0x00000000 && rom.read<4>(0x04ACD0+i+4)==0x00000000)
             {
                 defines.append(format("!owrev_bank_4_freespace = ${:0>6X}\n", 0x04ACD0+i));
                 if(settings.verbose)
                     println("Using OW Revolution bank 4 freespace located at ${:0>6X}\n", 0x04ACD0+i);
                 break;
             }
+            if(0x04ACD0+i>=BOWSIE_USED_PTR)
+                return error("Found no OW Revolution freespace in bank 4.");
         }
-        defines.append(format("!owrev_draw_player_routine #= ${:0>6X}", owrev_draw_player_routine));
     }
     ofstream(tool_folder+"asm/bowsie_defines.asm").write(defines.c_str(), defines.size());
 
@@ -1046,11 +1056,11 @@ endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_
 incsrc macro.asm\n\n\
 namespace {1}\n\
     freecode cleaned\n\
-    incsrc \"sprites/{2}\"\n\
+    incsrc {4}\n\
     print \"Sprite {3:0>2X} - {2}\"\n\
     print \"    Init routine inserted at: $\", hex({1}_init)\n\
     print \"    Main routine inserted at: $\", hex({1}_main)\n\
-namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_number));
+namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_number, ("\""+tool_folder+"sprites/"+sprite_filename+"\"")));
             if(!rom.inline_patch(tool_folder, insert_sprites.c_str()))
                 return error("Could not insert sprite {}. Details: {}\n", sprite_filename, asar_geterrors(&asar_errcount)->fullerrdata);
             else
@@ -1141,6 +1151,12 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     rom.done();
     if(!cleanup(tool_folder))
         return error("Error cleaning up temporary files. Exiting... (Your ROM was still saved anyway)");
+    #if defined(_WIN32)
+        system("pause");
+    #else
+        printf("Press Enter to continue");
+        getchar();
+    #endif
     return 0;
 }
 

@@ -9,7 +9,14 @@
 !offs_threshold_x = $0000
 !offs_threshold_y = $0000
 
-    LDA !ow_sprite_x_pos,x
+    if !bowsie_owrev
+        LDA !ow_sprite_props,x
+        LSR
+        BCC +
+        CLC
+        RTL
+    endif
++   LDA !ow_sprite_x_pos,x
     SEC
     SBC $1A
     STA $00

@@ -8,8 +8,8 @@ incsrc bowsie_defines.asm       ; don't delete this! it's created during the too
 !oam_limit      = $01E8
 
 macro define_ow_sprite_table(name, address)
-        !<name> = $<address>|!addr
-        !<address> = !<name>
+        !<name>     #= $<address>|!addr
+        !<address>  #= !<name>
 endmacro
 
 ;   Tables

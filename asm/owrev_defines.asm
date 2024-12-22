@@ -1,3 +1,7 @@
+; OW Revolution allows up to 32 sprite slots. The tables are rearranged for that purpose.
+; This is a modification of its original system, though. Just like in Lui's system, the
+; tables are discontiguous.
+
 incsrc bowsie_defines.asm       ; don't delete this! it's created during the tool run.
 
 !oam_start_p    = $0000
@@ -10,27 +14,29 @@ macro define_ow_sprite_table(name, address)
 endmacro
 
 ;   Tables
-%define_ow_sprite_table(ow_sprite_num, 14C8)
-%define_ow_sprite_table(ow_sprite_speed_x, 14F8)
-%define_ow_sprite_table(ow_sprite_speed_y, 1528)
-%define_ow_sprite_table(ow_sprite_speed_z, 1558)
-%define_ow_sprite_table(ow_sprite_x_pos, 1588)
-%define_ow_sprite_table(ow_sprite_y_pos, 15B8)
-%define_ow_sprite_table(ow_sprite_z_pos, 15E8)
-%define_ow_sprite_table(ow_sprite_timer_1, 1618)
-%define_ow_sprite_table(ow_sprite_timer_2, 1648)
-%define_ow_sprite_table(ow_sprite_timer_3, 1678)
-%define_ow_sprite_table(ow_sprite_misc_1, 16A8)
-%define_ow_sprite_table(ow_sprite_misc_2, 16D8)
-%define_ow_sprite_table(ow_sprite_misc_3, 1708)
-%define_ow_sprite_table(ow_sprite_misc_4, 1738)
-%define_ow_sprite_table(ow_sprite_misc_5, 1768)
-%define_ow_sprite_table(ow_sprite_extra_bits, 1798)
-%define_ow_sprite_table(ow_sprite_speed_x_acc, 17C8)
-%define_ow_sprite_table(ow_sprite_speed_y_acc, 17F8)
-%define_ow_sprite_table(ow_sprite_speed_z_acc, 1828)
-%define_ow_sprite_table(ow_sprite_init, 188C)
+%define_ow_sprite_table(ow_sprite_num, 0DE5)
+%define_ow_sprite_table(ow_sprite_speed_x, 0E25)
+%define_ow_sprite_table(ow_sprite_speed_y, 0E65)
+%define_ow_sprite_table(ow_sprite_speed_z, 0EA5)
+%define_ow_sprite_table(ow_sprite_x_pos, 14B0)
+%define_ow_sprite_table(ow_sprite_y_pos, 14F0)
+%define_ow_sprite_table(ow_sprite_z_pos, 1530)
+%define_ow_sprite_table(ow_sprite_timer_1, 1570)
+%define_ow_sprite_table(ow_sprite_timer_2, 15B0)
+%define_ow_sprite_table(ow_sprite_timer_3, 15F0)
+%define_ow_sprite_table(ow_sprite_misc_1, 1630)
+%define_ow_sprite_table(ow_sprite_misc_2, 1670)
+%define_ow_sprite_table(ow_sprite_misc_3, 16B0)
+%define_ow_sprite_table(ow_sprite_misc_4, 16F0)
+%define_ow_sprite_table(ow_sprite_misc_5, 1730)
+%define_ow_sprite_table(ow_sprite_extra_bits, 1770)
+%define_ow_sprite_table(ow_sprite_speed_x_acc, 17B0)
+%define_ow_sprite_table(ow_sprite_speed_y_acc, 17F0)
+%define_ow_sprite_table(ow_sprite_speed_z_acc, 1830)
+%define_ow_sprite_table(ow_sprite_init, 1870)
+;   OW Revolution needs this one
+%define_ow_sprite_table(ow_sprite_props, 1E02)
 ;   Flags
-%define_ow_sprite_table(ow_sprite_index, 1858)
-%define_ow_sprite_table(ow_sprite_oam, 185A)
-%define_ow_sprite_table(ow_sprite_oam_p, 185C)
+%define_ow_sprite_table(ow_sprite_index, 1E42)
+%define_ow_sprite_table(ow_sprite_oam, 1E44)
+%define_ow_sprite_table(ow_sprite_oam_p, 1E46)
