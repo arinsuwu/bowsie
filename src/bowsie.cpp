@@ -21,7 +21,7 @@ using namespace asar;
 */
 template<class... Args> int error(const format_string<Args...> msg, Args &&... args)
 {
-    print(cerr, "ERROR: {}",format(msg, args...));
+    println(cerr, "ERROR: {}",format(msg, args...));
     #if defined(_WIN32)
         system("pause");
     #else
@@ -57,7 +57,7 @@ bool cleanup(string tool_folder)
     {
         filesystem::remove(tool_folder+"asm/tmp.asm");
         filesystem::remove(tool_folder+"asm/bowsie_defines.asm");
-        filesystem::remove(tool_folder+"asm/macro.asm");
+        filesystem::remove(tool_folder+"asm/ssr.asm");
         filesystem::remove(tool_folder+"asm/init_ptrs.bin");
         filesystem::remove(tool_folder+"asm/main_ptrs.bin");
         return true;
@@ -681,7 +681,7 @@ int main(int argc, char *argv[])
                 getline(cin, rom.rom_path);
                 format_path(&rom.rom_path);
                 if(!rom.rom_path.ends_with(".smc") && !rom.rom_path.ends_with(".sfc"))
-                    error("Not a valid ROM file: {}\n", rom.rom_path);
+                    error("Not a valid ROM file: {}", rom.rom_path);
                 else
                     break;
             }
@@ -691,7 +691,7 @@ int main(int argc, char *argv[])
                 getline(cin, list_path);
                 format_path(&list_path);
                 if(!list_path.ends_with(".txt"))
-                    error("Not a valid list file: {}\n", list_path);
+                    error("Not a valid list file: {}", list_path);
                 else
                     break;
             }
@@ -849,7 +849,7 @@ int main(int argc, char *argv[])
     string tool_folder = filesystem::absolute(argv[0]).parent_path().string()+"/";
     string rom_name = filesystem::absolute(rom.rom_path).parent_path().string()+"/"+filesystem::path(rom.rom_path).stem().string();
 
-    string full_patch(format("incsrc \"{1}/asm/{0}_defines.asm\"\nincsrc \"{1}/asm/macro.asm\"\n\n", settings.method, tool_folder));
+    string full_patch(format("incsrc \"{1}/asm/{0}_defines.asm\"\nincsrc \"{1}/asm/ssr.asm\"\nincsrc \"{1}/asm/macro.asm\"\n\n", settings.method, tool_folder));
     {
         string tmp;
         // Insert the method
@@ -992,7 +992,7 @@ endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_
         println("{} shared subroutines inserted.\n{}\n", asar_errcount, settings.verbose ? "===========================================================" : "");
         offset = asar_errcount;
     }
-    ofstream(tool_folder+"asm/macro.asm").write(routine_macro.c_str(), routine_macro.size());
+    ofstream(tool_folder+"asm/ssr.asm").write(routine_macro.c_str(), routine_macro.size());
     rom.inline_patch(tool_folder, routine_content.c_str());
 
     // Pointers
@@ -1053,7 +1053,8 @@ endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_
             if(!curr_sprite)
                 return error("Could not open sprite with number {:0>2X} and filename {}. Make sure the sprite exists and is in the sprites directory.", sprite_number, sprite_filename);
             string insert_sprites(format("incsrc {0}_defines.asm\n\
-incsrc macro.asm\n\n\
+incsrc ssr.asm\n\
+incsrc macro.asm\n\
 namespace {1}\n\
     freecode cleaned\n\
     incsrc {4}\n\
@@ -1160,7 +1161,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     return 0;
 }
 
-// cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=std.ifc" /reference "rapidjson=rapidjson.ifc" /reference "asar=asar.ifc" bowsie.cpp std.obj rapidjson.obj asar.obj /link bowsie.res
+// cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" src/bowsie.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res
 // rc /nologo bowsie.rc
 
 // for_each(rom_path.begin()+rom_path.size()-3,rom_path.end(),[](char &c){c = toupper(c);});

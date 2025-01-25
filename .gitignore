@@ -18,4 +18,5 @@ sprites/
 *.obj
 *.pdb
 *.bst
+tbl.asm
 known issues.txt

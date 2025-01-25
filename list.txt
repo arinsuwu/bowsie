@@ -14,6 +14,7 @@
 ; other sprites i'm making
 7 ow_yoshi.asm
 8 no_yoshi.asm
+9 green_parakoopa.asm
 
 ; vldc9
 30 staticsprite.asm
