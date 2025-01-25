@@ -8,6 +8,13 @@ ___Non-OW Revolution___
 - __Katrina__: this system actually works now LOL
 
 
+BOWSIE v1.10 RELEASE CANDIDATE 2
+---
+### Features
+- Added a macro library. By default it includes two macros:
+  - A macro to draw a shadow, like the VLDC9 sprites which use it.
+  - A macro to draw the vanilla game's shadow.
+
 BOWSIE v1.10 RELEASE CANDIDATE 1
 ---
 ### Features
