@@ -4,6 +4,7 @@ ExGraphics/
 sysLMRestore/
 releases/
 sprites/
+uberasm/
 *.pal
 *.palmask
 *.bin
@@ -20,3 +21,4 @@ sprites/
 *.bst
 tbl.asm
 known issues.txt
+Widescree*.asm

@@ -1,6 +1,26 @@
+/*
+ * BOWSIE - Better Overworld Sprite Insertion Engine
+ * ---
+ * C++ code is (c) 2024 Erik Rios (Erik)
+ * 65816 ASM code is due to various authors:
+ * - vldc9.asm and its routines originally by Lui37, Medic et al. in 2016
+ *   modifications done by JackTheSpades in 2018 and Erik in 2018, 2024-25
+ * - katrina.asm originally by Katrina in 2018 building upon owrev.asm
+ *   modifications done by Erik in 2024-25
+ * - owrev.asm originally by Erik in 2024
+ *   with pointers by yoshifanatic
+ * - All other ASM code (eg. macros, non-VLDC routines) is by Erik
+ * 
+ * Asar is (c) 2011 Alcaro, RPG Hacker, trillian/randomdude999 et al.
+ * rapidjson is (c) 2015 Tencent.
+ * meOWmeOW is (c) 2025 Erik, inspired by MeiMei which is (c) 2019 Akaginite/33953YoShI.
+ * It uses none of her code.
+*/
+
 import std;
 import rapidjson;
 import asar;
+//import meowmeow;
 
 #define VERSION 1
 #define SUBVER 10
@@ -8,6 +28,7 @@ import asar;
 using namespace std;
 using namespace rapidjson;
 using namespace asar;
+//using namespace meowmeow;
 
 // =======================================
 //   Helper functions
@@ -88,10 +109,6 @@ struct Settings
     int slots;
     // Implementation used to process sprites
     string method;
-    // Erase the original game's OW sprite handler
-    bool replace_original;
-    // Detect the existence of the OMTRE patch
-    bool omtre_detect;
     // Directory for custom sprites
     string custom_dir;
     // Ignore RAM boundary
@@ -108,8 +125,8 @@ struct Settings
     bool deserialize_json(Document* json, string* err_str)
     {
         bool status = true;
-        static const char * keys[] = {"verbose", "generate_map16", "slots", "method", "replace_original",
-                                     "omtre_detect", "custom_dir", "bypass_ram_check"};
+        static const char * keys[] = {"verbose", "generate_map16", "slots", "method",
+                                      "custom_dir", "bypass_ram_check"};
         *err_str = "Couldn't find key(s):\t\t\t\t";
         for(const char * key : keys)
         {
@@ -153,20 +170,6 @@ struct Settings
             this->method = (*json)["method"].GetString();
             format_path(&(this->method));
         }
-        if(!(*json)["replace_original"].IsBool())
-        {
-            (*err_str).append("Incorrect data type for replace_original:\texpected Boolean\n");
-            status = false;
-        }
-        else
-            this->replace_original = (*json)["replace_original"].GetBool();
-        if(!(*json)["omtre_detect"].IsBool())
-        {
-            (*err_str).append("Incorrect data type for omtre_detect:\t\texpected Boolean\n");
-            status = false;
-        }
-        else
-            this->omtre_detect = (*json)["omtre_detect"].GetBool();
         if(!( (*json)["custom_dir"].IsNull() || (*json)["custom_dir"].IsString()))
         {
             (*err_str).append("Incorrect data type for custom_dir:\t\texpected Null or String\n");
@@ -655,7 +658,7 @@ void destroy_map16(string filename)
 // =======================================
 
 #define BOWSIE_USED_PTR 0x04EF3E  // must be freespace in bank 4
-#define MAGIC_CONSTANT 0x00CAC705 // 00cactus
+#define MAGIC_CONSTANT 0x00CAC705 // 00cactus - refer to FE!N by Jacques Webster and Jordan Carter
 #define MAGIC_CONSTANT_WRITE ((MAGIC_CONSTANT&0xFF)<<24)|((MAGIC_CONSTANT&0xFF00)<<8)|((MAGIC_CONSTANT&0xFF0000)>>8)|((MAGIC_CONSTANT&0xFF000000)>>24)
 
 int main(int argc, char *argv[])
@@ -714,10 +717,6 @@ int main(int argc, char *argv[])
                 println("\t\t\t  - katrina: Katrina's alternative RAM definitions for VLDC9");
                 println("\t\t\t  - owrev:   replace the OW Revolution system");
                 println("\t\t\t  - custom:  any user-specified handler");
-                println("  replace_original\tErase the original game's OW sprite handler/sprites");
-                println("  omtre_detect\t\tIf replace_original is false, detect the existence");
-                println("\t\t\t  of the Overworld Mario Tilemap Rewrite and Expand (OMTRE)");
-                println("\t\t\t  patch and insert the code in there\n");
                 println("Advanced settings (don't touch if you don't know what you're doing)");
                 println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
                 println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
@@ -801,7 +800,7 @@ int main(int argc, char *argv[])
     {
         ow_rev = true;
         if(settings.verbose)
-            println("Overworld Revolution detected.\nWARNING: Support is experimental!\n");
+            println("Overworld Revolution detected.\n");
     }
 
     /*
@@ -835,8 +834,6 @@ int main(int argc, char *argv[])
         println("Running BOWSIE with");
         println("Slots:\t\t\t\t{}", settings.slots);
         println("Insertion method:\t\t{}", settings.method);
-        println("Replacing original sprites:\t{}", settings.replace_original ? "Yes" : "No");
-        println("OMTRE check:\t\t\t{}", settings.omtre_detect ? "Enabled" : "Disabled");
         println("RAM checks:\t\t\t{}", settings.bypass_ram_check ? "Ignored (!)" : "Enabled");
         println("Asar version: v{}.{}{}\n", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
                                             (int)(((asar_version()%1000)-(asar_version()%10))/100),
@@ -910,8 +907,6 @@ int main(int argc, char *argv[])
     // BOWSIE-specific defines
     string defines(format("\
 !bowsie_ow_slots = {}\n\
-!bowsie_replace_original = {}\n\
-!bowsie_omtre = {}\n\
 !bowsie_version = {}\n\
 !bowsie_subversion = {}\n\n\
 !bowsie_contiguous = {}\n\n\
@@ -929,7 +924,7 @@ endif\n\n\
 !bowsie_owrev = 0\n\
 if read4($048000) == $524F4659\n\
     !bowsie_owrev = 1\n\
-endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_detect ? '1' : '0', VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
+endif\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
 
     /*
         these loops locate where certain code is inserted by overworld revolution.
@@ -996,8 +991,10 @@ endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_
     rom.inline_patch(tool_folder, routine_content.c_str());
 
     // Pointers
-    unsigned char * ow_init_ptrs= new unsigned char[0x7E*3] {};
-    unsigned char * ow_main_ptrs= new unsigned char[0x7E*3] {};
+    unsigned char * ow_init_ptrs = new unsigned char[0x7E*3] {};
+    unsigned char * ow_main_ptrs = new unsigned char[0x7E*3] {};
+    unsigned char * ow_extra = new unsigned char[0x7F] {};
+    ow_extra[0x7E] = 0x03;
     for(int i=0;i<0x7E;++i)
     {
         if(!ow_rev)
@@ -1018,6 +1015,7 @@ endif\n", settings.slots, settings.replace_original ? '1' : '0', settings.omtre_
             ow_init_ptrs[2+i*3] = 0x04;
             ow_main_ptrs[2+i*3] = 0x04;
         }
+        ow_extra[i] = 0x03;
     }
 
     // Sprites
@@ -1058,9 +1056,11 @@ incsrc macro.asm\n\
 namespace {1}\n\
     freecode cleaned\n\
     incsrc {4}\n\
+    !extra ?= 2\n\
     print \"Sprite {3:0>2X} - {2}\"\n\
     print \"    Init routine inserted at: $\", hex({1}_init)\n\
     print \"    Main routine inserted at: $\", hex({1}_main)\n\
+    print \"    Extra bytes: \", dec(!extra)\n\
 namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_number, ("\""+tool_folder+"sprites/"+sprite_filename+"\"")));
             if(!rom.inline_patch(tool_folder, insert_sprites.c_str()))
                 return error("Could not insert sprite {}. Details: {}\n", sprite_filename, asar_geterrors(&asar_errcount)->fullerrdata);
@@ -1072,7 +1072,8 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
                 for(int i=0;i<asar_errcount;++i)
                 {
                         string sprite_addr(sprite_print[i]);
-                        println("{}", sprite_addr);
+                        if(settings.verbose)
+                            println("{}", sprite_addr);
                         if(sprite_addr.contains('$'))
                         {
                             sprite_addr = string(sprite_addr.begin()+sprite_addr.find_first_of("$")+1, sprite_addr.end());
@@ -1089,6 +1090,24 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
                                 ow_main_ptrs[2+(sprite_number-1)*3] = stoi(string(sprite_addr.begin(),sprite_addr.begin()+2), &pos, 16);
                                 ow_main_ptrs[1+(sprite_number-1)*3] = stoi(string(sprite_addr.begin()+2,sprite_addr.begin()+4), &pos, 16);
                                 ow_main_ptrs[0+(sprite_number-1)*3] = stoi(string(sprite_addr.begin()+4,sprite_addr.begin()+6), &pos, 16);
+                            }
+                        }
+                        else if(sprite_addr.contains("Extra bytes:"))
+                        {
+                            sprite_addr = string(sprite_addr.begin()+sprite_addr.find_first_of(":")+2, sprite_addr.end());
+                            try
+                            {
+                                int extra = stoi(sprite_addr);
+                                if(extra<=-1 || extra>=9) throw out_of_range("");
+                                ow_extra[sprite_number-1] = 0x03+extra;
+                            }
+                            catch(invalid_argument const & err)
+                            {
+                                return error("Error parsing the extra bytes for {}: could not parse extra byte define\n  {}\nMake sure the define is a number between 0 and 8.\n", sprite_filename, sprite_addr);
+                            }
+                            catch(out_of_range const & err)
+                            {
+                                return error("Error parsing the extra bytes for {}: invalid amount of extra bytes\n  {}\n", sprite_filename, sprite_addr);
                             }
                         }
                 }
@@ -1133,6 +1152,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     println("{} sprites inserted.\n===========================================================", sprite_count);
     ofstream(tool_folder+"asm/init_ptrs.bin", ios::binary).write((char *)ow_init_ptrs, 0x7E*3);
     ofstream(tool_folder+"asm/main_ptrs.bin", ios::binary).write((char *)ow_main_ptrs, 0x7E*3);
+    ofstream(tool_folder+"asm/extra_size.bin", ios::binary).write((char *)ow_extra, 0x7F);
 
     // Sprite system
     full_patch.append(format("\norg ${:0>6X}\n\

@@ -1,12 +1,31 @@
 BOWSIE v1.10
 ---
 ### Features
+___BOWSIE___
+- Added support for arbitrarily sized extra bytes, which you may know from level sprites as the "Extension" field. Thanks to FuSoYa for adding this feature to Lunar Magic!
+  - This feature needs Lunar Magic 3.51 or newer to work.
+  - BOWSIE will now enable two 8-bit extra bytes to form a full-sized extra byte, the way OW Revolution sprites work.
+  - Extra bytes used are controlled by the `!extra` define in a sprite's ASM file. For example, `!extra = 5` will enable five extra bytes.
+  - Added two tables, `!ow_sprite_extra_1` and `!ow_sprite_extra_2`, to access four 8-bit extra bytes.
+  - You're limited to eight extra bytes.
+- Added meOWmeOW, which will detect changes in extra bytes, similar to Akaginite's MeiMei.
+  - Added the `fix_extra` setting, which allows you to enable or disable meOWmeOW if so desired.
+  - meOWmeOW is disabled with OW Revolution. Sorry! Run PIXI after BOWSIE to fix any potential extra byte changes via MeiMei.
+- Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table `$0420`. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
+- You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
+- Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.
+  - `omtre_detect` was also removed as a consequence, as everything fits in vanilla freespace now!
+
 ___OW Revolution___
 - The Map16 handler can now generate regular sprite Map16 data.
+- Added a missing table, `!ow_sprite_load_index`, which is the equivalent to level sprites' `!161A`: the index to the table used to determine whether a sprite should respawn.
 
 ___Non-OW Revolution___
 - __Katrina__: this system actually works now LOL
 
+### Fixes
+- Fixed a crash in the VLDC9 system when using sprite numbers `55-7F` -- the high byte of the index to the pointers was being lost.
+- Fixed reading garbage when the pointer to sprite data not inserted (equal to `$000000`). This was a regression issue introduced when I cleaned the code in my modified PIXI builds.
 
 BOWSIE v1.10 RELEASE CANDIDATE 2
 ---
@@ -69,7 +88,7 @@ Note that since OW Revolution support is still immature, I'm not pushing the ver
 BOWSIE v1.02
 ---
 ### Features
-- Added experimental support for yoshifanatics' Overworld Revolution. Note that the tool will attempt to detect the patch on its own.\
+- Added experimental support for yoshifanatics' Overworld Revolution. Note that the tool will attempt to detect the patch on its own.  
 The following additions are all related to this above feature:
   - Added the `owrev` sprite system, which modifies yoshifanatic's system with a variant of Lui's system. It's included at `owrev.asm`.
   - Added reads in the tool to find the current freespace in bank 4, where BOWSIE installs some of its code, and the routine `SMW_ProcessOWPlayers_DrawOverworldPlayerAndBorderSprites`, as the original jump is overwritten.
