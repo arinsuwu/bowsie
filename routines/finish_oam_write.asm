@@ -24,6 +24,8 @@
     LDX !ow_sprite_index
     LDA !ow_sprite_y_pos,x
     SEC
+    SBC !ow_sprite_z_pos,x
+    SEC
     SBC $1C
     STA $00
     LDA !ow_sprite_x_pos,x
