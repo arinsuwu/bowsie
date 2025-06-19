@@ -15,9 +15,9 @@ assert read4($048000) == $524F4659, "This needs OW Revolution to work."
 org $02A861                         ;   loads the actual OW sprites
     JML custom_ow_sprite_load
 
-org read3($0480D2)                  ;   pointer for the start of the OW sprite code in OW Revolution
-    JSR run_ow_sprite               ;\  process sprites
-    NOP                             ;/  four bytes. *for now* we can afford to NOP this.
+org $0480F2+4                       ;   four bytes reserved for custom OW sprite code in OW Revolution
+    JSR.w run_ow_sprite             ;   process sprites
+    RTL
 
 if read1($0EF30F) == $42
     org read3($0EF30C)+256          ;   enable 2 extra bytes (if the table exists only)
@@ -92,6 +92,8 @@ endif
     SEP #$20
     LDA $05                         ;\  store the sprite number
     STA !ow_sprite_num,x            ;/
+    LDA $02
+    STA !ow_sprite_load_index,x
     PLX
     JML $02A846|!bank               ;   return (we're back pretty soon either way)
 
