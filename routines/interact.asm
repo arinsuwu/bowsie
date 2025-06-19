@@ -12,6 +12,8 @@
     CMP !ow_sprite_x_pos,x
     BNE .return
     LDA !ow_sprite_y_pos,x
+    SEC
+    SBC !ow_sprite_z_pos,x
     AND #$FFFE
     STA $00
     LDA $1F19|!addr,y

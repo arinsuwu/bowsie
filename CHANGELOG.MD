@@ -26,6 +26,8 @@ ___Non-OW Revolution___
 ### Fixes
 - Fixed a crash in the VLDC9 system when using sprite numbers `55-7F` -- the high byte of the index to the pointers was being lost.
 - Fixed reading garbage when the pointer to sprite data not inserted (equal to `$000000`). This was a regression issue introduced when I cleaned the code in my modified PIXI builds.
+- Fixed the vanilla shadow macro using a non-assigned OAM slot. Thanks to simoncaio for reporting this and helping me test the fix!
+- Fixed `%interact()` not taking a sprite's Z position into account. Thanks to simoncaio for making me realize this was the case!
 
 BOWSIE v1.10 RELEASE CANDIDATE 2
 ---
