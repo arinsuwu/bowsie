@@ -12,6 +12,7 @@ ___BOWSIE___
   - Added the `fix_extra` setting, which allows you to enable or disable meOWmeOW if so desired.
   - meOWmeOW is disabled with OW Revolution. Sorry! Run PIXI after BOWSIE to fix any potential extra byte changes via MeiMei.
 - Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table `$0420`. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
+- `%sub_horz_pos()` and `%sub_vert_pos()` now store the distance between player and sprite in scratch RAM `$0E`.
 - You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.
   - `omtre_detect` was also removed as a consequence, as everything fits in vanilla freespace now!
