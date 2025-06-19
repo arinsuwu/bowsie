@@ -34,27 +34,25 @@ macro draw_vanilla_shadow()
     LDA $02
     CLC
     ADC !ow_sprite_z_pos,x
+    STA $01FD|!addr,y
     STA $0201|!addr,y
-    STA $0205|!addr,y
     LDA $00
-    STA $0200|!addr,y
+    STA $01FC|!addr,y
     CLC
     ADC #$08
-    STA $0204|!addr,y
+    STA $0200|!addr,y
     REP #$20
     LDA #$3029
-    STA $0202|!addr,y
+    STA $01FE|!addr,y
     LDA #$7029
-    STA $0206|!addr,y
+    STA $0202|!addr,y
 
     PHY
     TYA
     LSR #2
     TAY
     LDA #$0000
-    BCC +
-    LDA #$0100
-+   STA $0420|!addr,y
+    STA $041F|!addr,y
     SEP #$20
     PLY
 endmacro
