@@ -24,7 +24,7 @@
         CLC
         ADC #!offs_threshold_x
     endif
-    if read1($04FB2A) == $5C
+    if !bowsie_widescreen_ow    ;   widescreen overworld check
         CMP.w #$FFF0+(!offs_threshold_x*2)
         BCS +
     endif

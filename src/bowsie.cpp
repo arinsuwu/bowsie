@@ -924,7 +924,11 @@ endif\n\n\
 !bowsie_owrev = 0\n\
 if read4($048000) == $524F4659\n\
     !bowsie_owrev = 1\n\
-endif\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
+endif\n\n\
+!bowsie_widescreen_ow = equal(read1($04FB2A), $5C)\n\
+if !bowsie_owrev\n\
+    !bowsie_widescreen_ow = not(equal(read1($0480D3)&$30, $00))\n\
+endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
 
     /*
         these loops locate where certain code is inserted by overworld revolution.
