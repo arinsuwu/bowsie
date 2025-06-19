@@ -20,6 +20,7 @@ ___BOWSIE___
 ___OW Revolution___
 - The Map16 handler can now generate regular sprite Map16 data.
 - Added a missing table, `!ow_sprite_load_index`, which is the equivalent to level sprites' `!161A`: the index to the table used to determine whether a sprite should respawn.
+- Added `%erase_sprite()`. In it's simplest form, it just sets a sprite number to zero, but when using OW Revolution, it also marks the sprite to be reloaded correctly.
 
 ___Non-OW Revolution___
 - __Katrina__: this system actually works now LOL

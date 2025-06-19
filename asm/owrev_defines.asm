@@ -34,8 +34,21 @@ endmacro
 %define_ow_sprite_table(ow_sprite_speed_y_acc, 17F0)
 %define_ow_sprite_table(ow_sprite_speed_z_acc, 1830)
 %define_ow_sprite_table(ow_sprite_init, 1870)
-;   OW Revolution needs this one
+
+;   OW Revolution needs these
 %define_ow_sprite_table(ow_sprite_props, 1E02)
+%define_ow_sprite_table(ow_sprite_load_index, 1E32)
+
+if or(equal(!sa1, 1), equal(read4($02FFE2), $44535453))
+    if !sa1
+        !ow_sprite_load_table  #= $7FAF00
+    else
+        !ow_sprite_load_table  #= $418A00
+    endif
+else
+    !ow_sprite_load_table      #= $1938
+endif
+
 ;   Flags
 %define_ow_sprite_table(ow_sprite_index, 1E42)
 %define_ow_sprite_table(ow_sprite_oam, 1E44)
