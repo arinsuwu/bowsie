@@ -81,8 +81,7 @@ bool cleanup(string tool_folder)
         filesystem::remove(tool_folder+"asm/tmp.asm");
         filesystem::remove(tool_folder+"asm/bowsie_defines.asm");
         filesystem::remove(tool_folder+"asm/ssr.asm");
-        filesystem::remove(tool_folder+"asm/init_ptrs.bin");
-        filesystem::remove(tool_folder+"asm/main_ptrs.bin");
+        filesystem::remove(tool_folder+"asm/*.bin");
         return true;
     }
     catch(filesystem::filesystem_error const & err)
@@ -107,6 +106,8 @@ struct Settings
     bool verbose;
     // Generate sprite map16
     bool generate_map16;
+    // Enable meOWmeOW to fix extra byte changes
+    bool meowmeow;
     // Amount of OW sprites
     int slots;
     // Implementation used to process sprites
@@ -155,6 +156,13 @@ struct Settings
         }
         else
             this->generate_map16 = (*json)["generate_map16"].GetBool();
+        if(!(*json)["meowmeow"].IsBool())
+        {
+            (*err_str).append("Incorrect data type for meowmeow:\t\texpected Boolean\n");
+            status = false;
+        }
+        else
+            this->meowmeow = (*json)["meowmeow"].GetBool();
         if(!(*json)["slots"].IsUint())
         {
             (*err_str).append("Incorrect data type for slots:\t\t\texpected Number (Unsigned Integer)\n");
@@ -708,6 +716,7 @@ int main(int argc, char *argv[])
     if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
     {
         ow_rev = true;
+        settings.meowmeow = false;
         if(settings.verbose)
             println("Overworld Revolution detected.\n");
     }
@@ -743,6 +752,7 @@ int main(int argc, char *argv[])
         println("Running BOWSIE with");
         println("Slots:\t\t\t\t{}", settings.slots);
         println("Insertion method:\t\t{}", settings.method);
+        println("meOWmeOW:\t\t\t{}", settings.meowmeow ? "Enabled" : "Disabled");
         println("RAM checks:\t\t\t{}", settings.bypass_ram_check ? "Ignored (!)" : "Enabled");
         println("Asar version: v{}.{}{}\n", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
                                             (int)(((asar_version()%1000)-(asar_version()%10))/100),
@@ -802,14 +812,12 @@ int main(int argc, char *argv[])
             return error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
         else if(settings.verbose)
             println("Clean-up done.\n");
-        
-        rom.meowmeow = !ow_rev;
+
     }
     else
     {
         println("First time using BOWSIE! Thank you. :)\n");
         rom.inline_patch(tool_folder, format("org ${:0>6X} : dd ${:0>8X}", BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE).c_str());
-        rom.meowmeow = true;
     }
 
     // Check if custom OW sprites have been enabled.
@@ -935,10 +943,8 @@ endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : 
         rom.new_extra_bytes[i] = 0x03;
     }
 
-    println("Running BOWSIE with meOWmeOW {}.", rom.meowmeow ? "enabled" : "disabled");
-
     meowmeow meowmeow;
-    if(rom.meowmeow)
+    if(settings.meowmeow)
         if(!meowmeow.init_meowmeow(rom))
             return error("An error ocurred while initializing meOWmeOW. Aborting execution.");
 
@@ -1091,7 +1097,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
         return error("Something went wrong while applying the sprite system. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
 
     // meOWmeOW, if asked
-    if(rom.meowmeow)
+    if(settings.meowmeow)
     {
         vector<uint8_t> new_sprite_data;
         if(!meowmeow.execute_meowmeow(rom, tool_folder, new_sprite_data))
@@ -1101,7 +1107,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     // Done
     println("All sprites inserted successfully!\nRemember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
     map16.done(string(rom_name+".s16ov").c_str());
-    rom.done();
+    rom.done(settings.meowmeow);
     if(!cleanup(tool_folder))
         return error("Error cleaning up temporary files. Exiting... (Your ROM was still saved anyway)");
     #if defined(_WIN32)

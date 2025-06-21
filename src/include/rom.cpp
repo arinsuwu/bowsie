@@ -23,12 +23,13 @@ bool Rom::open_rom()
 }
 
 /*
-    done(void) -> void: Close ROM input
+    done(bool meowmeow) -> void: Close ROM input
     ---
+    Input:  meowmeow indicates meOWmeOW ran
     Output: patched ROM is now written to disk
             raw_rom_data destroyed
 */
-void Rom::done()
+void Rom::done(bool meowmeow)
 {
     ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
     delete[] raw_rom_data;

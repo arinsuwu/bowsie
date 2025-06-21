@@ -39,9 +39,6 @@ namespace meOWmeOW
         */
         bool init_meowmeow(Rom& rom)
         {
-            // Mark meOWmeOW as called
-            rom.meowmeow = true;
-
             // Verify if there is an extra byte table already in ROM.
             rom.old_extra_bytes = new char[0x7F] { };
             const int extra_byte_loc = snestopc_pick( (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR)&0xFF) | \

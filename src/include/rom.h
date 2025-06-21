@@ -23,10 +23,9 @@ struct Rom
     char * old_extra_bytes;
     char * new_extra_bytes;
     bool first_time;
-    bool meowmeow;
 
     bool open_rom();
-    void done();
+    void done(bool);
     bool inline_patch(string, const char *);
 
     /*

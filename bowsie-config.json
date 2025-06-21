@@ -1,7 +1,7 @@
 {
     "verbose": true,
     "generate_map16": true,
-    "fix_extra": true,
+    "meowmeow": true,
 
     "slots": 24,
 
