@@ -1,7 +1,7 @@
 /*
  * BOWSIE - Better Overworld Sprite Insertion Engine
  * ---
- * C++ code is (c) 2024 Erik Rios (Erik)
+ * C++ code is (c) 2024 Erik Rios (Erik/Arinsu)
  * 65816 ASM code is due to various authors:
  * - vldc9.asm and its routines originally by Lui37, Medic et al. in 2016
  *   modifications done by JackTheSpades in 2018 and Erik in 2018, 2024-25
@@ -17,10 +17,12 @@
  * It uses none of her code.
 */
 
+#include "include/rom.h"
+
 import std;
 import rapidjson;
 import asar;
-//import meowmeow;
+import meowmeow;
 
 #define VERSION 1
 #define SUBVER 10
@@ -28,7 +30,7 @@ import asar;
 using namespace std;
 using namespace rapidjson;
 using namespace asar;
-//using namespace meowmeow;
+using namespace meOWmeOW;
 
 // =======================================
 //   Helper functions
@@ -189,100 +191,6 @@ struct Settings
             this->bypass_ram_check = (*json)["bypass_ram_check"].GetBool();
 
         return status;
-    }
-};
-
-// =======================================
-
-#define HEADER_SIZE 512
-#define MAX_SIZE 1024*1024*16
-/*
-    struct Rom: SMW ROM data
-    ---
-*/
-struct Rom
-{
-    string rom_path;
-    ifstream rom_data;
-    int rom_size;
-    char * raw_rom_data;
-    bool first_time;
-
-    // I/O functions
-
-    /*
-        open_rom(void) -> bool: Set ROM file input stream
-        ---
-        Output: rom_data is an ifstream with the ROM data
-                rom_size contains the ROM size in bytes (counting the header!)
-                raw_rom_data is a 16MB character array initialized to zeroes
-                returns true if the ROM opened successfully, false otherwise
-    */
-    bool open_rom()
-    {
-        rom_data = ifstream(rom_path, ios::binary | ios::ate);
-        rom_size = rom_data.tellg();
-        raw_rom_data = new char[MAX_SIZE] { 0x00 };
-        first_time = true;
-        return !(!rom_data);
-    }
-
-    /*
-        done(void) -> void: Close ROM input
-        ---
-        Output: patched ROM is now written to disk
-                raw_rom_data destroyed
-    */
-    void done()
-    {
-        ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
-        delete[] raw_rom_data;
-    }
-
-    // ROM data operations
-
-    /*
-        read\<int bytes>(int addr) -> uint: Read bytes from ROM
-        ---
-        Input:  addr is the SNES address to read
-                bytes is the amount of bytes to read
-        Output: res contains the bytes read (unsigned -1 in failure)
-    */
-    template<int bytes> unsigned int read(int addr)
-    {
-        unsigned int res = 0x0;
-        rom_data.clear();
-        rom_data.seekg(snestopc_pick(addr)+HEADER_SIZE);
-        for(int i=0;i<bytes;++i)
-            res|=(rom_data.get()&0xFF)<<((bytes-i-1)*8);
-        return res;
-    }
-
-    /*
-        inline_patch(const char * patch_content) -> bool: Patch ROM
-        ---
-        Input:  patch_content is a char with the patch to apply
-        Output: ./asm/tmp.asm contains the patch applied
-                returns true if the patch was successfully applied,
-                false otherwise
-    */
-    bool inline_patch(string tool_folder, const char * patch_content)
-    {
-        int new_size = rom_size - HEADER_SIZE;
-
-        if(first_time)
-        {
-            rom_data.seekg(512);
-            rom_data.read(&(raw_rom_data[HEADER_SIZE]), rom_size);
-        }
-
-        ofstream(tool_folder+"asm/tmp.asm").write(patch_content, strlen(patch_content));
-        string tmp_path = filesystem::absolute(tool_folder+"asm/tmp.asm").string();
-        bool patch_res = asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
-
-        if(patch_res)
-            first_time = false;
-        return patch_res;
     }
 };
 
@@ -668,6 +576,7 @@ int main(int argc, char *argv[])
     println("\t By Erik\n");
 
     Rom rom;
+
     string list_path;
     Settings settings;
 
@@ -785,7 +694,7 @@ int main(int argc, char *argv[])
         }
         BasicIStreamWrapper isw(ifs);
 
-        
+
         settings_json.ParseStream(isw);
         if(settings_json.HasParseError())
             return error("A problem occurred while parsing bowsie-settings.json. Please ensure the file isn't corrupted and has a valid JSON format. Check the readme for more information.");
@@ -893,11 +802,14 @@ int main(int argc, char *argv[])
             return error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
         else if(settings.verbose)
             println("Clean-up done.\n");
+        
+        rom.meowmeow = !ow_rev;
     }
     else
     {
         println("First time using BOWSIE! Thank you. :)\n");
         rom.inline_patch(tool_folder, format("org ${:0>6X} : dd ${:0>8X}", BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE).c_str());
+        rom.meowmeow = true;
     }
 
     // Check if custom OW sprites have been enabled.
@@ -997,8 +909,9 @@ endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : 
     // Pointers
     unsigned char * ow_init_ptrs = new unsigned char[0x7E*3] {};
     unsigned char * ow_main_ptrs = new unsigned char[0x7E*3] {};
-    unsigned char * ow_extra = new unsigned char[0x7F] {};
-    ow_extra[0x7E] = 0x03;
+    rom.new_extra_bytes = new char[0x7F] {};
+
+    rom.new_extra_bytes[0x7E] = 0x03;
     for(int i=0;i<0x7E;++i)
     {
         if(!ow_rev)
@@ -1019,8 +932,15 @@ endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : 
             ow_init_ptrs[2+i*3] = 0x04;
             ow_main_ptrs[2+i*3] = 0x04;
         }
-        ow_extra[i] = 0x03;
+        rom.new_extra_bytes[i] = 0x03;
     }
+
+    println("Running BOWSIE with meOWmeOW {}.", rom.meowmeow ? "enabled" : "disabled");
+
+    meowmeow meowmeow;
+    if(rom.meowmeow)
+        if(!meowmeow.init_meowmeow(rom))
+            return error("An error ocurred while initializing meOWmeOW. Aborting execution.");
 
     // Sprites
     int sprite_count = 0;
@@ -1103,7 +1023,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
                             {
                                 int extra = stoi(sprite_addr);
                                 if(extra<=-1 || extra>=9) throw out_of_range("");
-                                ow_extra[sprite_number-1] = 0x03+extra;
+                                rom.new_extra_bytes[sprite_number-1] = 0x03+extra;
                             }
                             catch(invalid_argument const & err)
                             {
@@ -1156,7 +1076,7 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     println("{} sprites inserted.\n===========================================================", sprite_count);
     ofstream(tool_folder+"asm/init_ptrs.bin", ios::binary).write((char *)ow_init_ptrs, 0x7E*3);
     ofstream(tool_folder+"asm/main_ptrs.bin", ios::binary).write((char *)ow_main_ptrs, 0x7E*3);
-    ofstream(tool_folder+"asm/extra_size.bin", ios::binary).write((char *)ow_extra, 0x7F);
+    ofstream(tool_folder+"asm/extra_size.bin", ios::binary).write(rom.new_extra_bytes, 0x7F);
 
     // Sprite system
     full_patch.append(format("\norg ${:0>6X}\n\
@@ -1170,6 +1090,14 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     if(!rom.inline_patch(tool_folder, full_patch.c_str()))
         return error("Something went wrong while applying the sprite system. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
 
+    // meOWmeOW, if asked
+    if(rom.meowmeow)
+    {
+        vector<uint8_t> new_sprite_data;
+        if(!meowmeow.execute_meowmeow(rom, tool_folder, new_sprite_data))
+            return error("Something went wrong while applying meOWmeOW. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
+    }
+        
     // Done
     println("All sprites inserted successfully!\nRemember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
     map16.done(string(rom_name+".s16ov").c_str());
