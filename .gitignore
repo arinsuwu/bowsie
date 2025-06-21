@@ -1,6 +1,7 @@
 .vscode/
 Graphics/
 ExGraphics/
+OR/
 sysLMRestore/
 releases/
 sprites/
@@ -19,6 +20,8 @@ uberasm/
 *.obj
 *.pdb
 *.bst
+*.bat
+list.txt
 tbl.asm
 known issues.txt
 Widescree*.asm
