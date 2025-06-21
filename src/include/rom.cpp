@@ -1,0 +1,67 @@
+#include "rom.h"
+
+using namespace std;
+using namespace asar;
+
+// I/O functions
+
+/*
+    open_rom(void) -> bool: Set ROM file input stream
+    ---
+    Output: rom_data is an ifstream with the ROM data
+            rom_size contains the ROM size in bytes (counting the header!)
+            raw_rom_data is a 16MB character array initialized to zeroes
+            returns true if the ROM opened successfully, false otherwise
+*/
+bool Rom::open_rom()
+{
+    rom_data = ifstream(rom_path, ios::binary | ios::ate);
+    rom_size = rom_data.tellg();
+    raw_rom_data = new char[MAX_SIZE] { 0x00 };
+    first_time = true;
+    return !(!rom_data);
+}
+
+/*
+    done(void) -> void: Close ROM input
+    ---
+    Output: patched ROM is now written to disk
+            raw_rom_data destroyed
+*/
+void Rom::done()
+{
+    ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
+    delete[] raw_rom_data;
+    delete[] new_extra_bytes;
+    if(meowmeow)
+        delete[] old_extra_bytes;
+}
+
+// ROM data operations
+
+/*
+    inline_patch(const char * patch_content) -> bool: Patch ROM
+    ---
+    Input:  patch_content is a char with the patch to apply
+    Output: ./asm/tmp.asm contains the patch applied
+            returns true if the patch was successfully applied,
+            false otherwise
+*/
+bool Rom::inline_patch(string tool_folder, const char * patch_content)
+{
+    int new_size = rom_size - HEADER_SIZE;
+
+    if(first_time)
+    {
+        rom_data.seekg(HEADER_SIZE);
+        rom_data.read(&(raw_rom_data[HEADER_SIZE]), rom_size);
+    }
+
+    ofstream(tool_folder+"asm/tmp.asm").write(patch_content, strlen(patch_content));
+    string tmp_path = filesystem::absolute(tool_folder+"asm/tmp.asm").string();
+    bool patch_res = asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
+
+    if(patch_res)
+        first_time = false;
+    return patch_res;
+}
