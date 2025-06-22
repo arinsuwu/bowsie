@@ -14,13 +14,13 @@ extern int numvarargs;
 
 struct macrodata
 {
-	autoarray<string> lines;
-	int numlines;
-	int startline;
-	const char * fname;
-	const char * const* arguments;
-	int numargs;
-	bool variadic;
+    autoarray<string> lines;
+    int numlines;
+    int startline;
+    const char * fname;
+    const char * const* arguments;
+    int numargs;
+    bool variadic;
 };
 
 extern assocarr<macrodata*> macros;

@@ -21,7 +21,7 @@ extern unsigned const char * romdata_r;
 extern int romlen_r;
 
 #define clean(string) do { string.qreplace(", ", ",", true); string.qreplace("  ", " ", true); \
-						strip_whitespace(string); string.qreplace("\t", " ", true);} while(0)
+                        strip_whitespace(string); string.qreplace("\t", " ", true);} while(0)
 #define clean_and_trim(string) do { clean(string); string.qreplace(" ", "", true);} while(0)
 
 int getlen(const char * str, bool optimizebankextraction=false);
@@ -58,15 +58,15 @@ extern int pass;
 
 class recurseblock {
 public:
-	recurseblock()
-	{
-		recursioncount++;
-		if (recursioncount > 250) asar_throw_error(pass, error_type_fatal, error_id_recursion_limit);
-	}
-	~recurseblock()
-	{
-		recursioncount--;
-	}
+    recurseblock()
+    {
+        recursioncount++;
+        if (recursioncount > 250) asar_throw_error(pass, error_type_fatal, error_id_recursion_limit);
+    }
+    ~recurseblock()
+    {
+        recursioncount--;
+    }
 };
 
 extern const int asarver_maj;
@@ -103,11 +103,11 @@ extern int optimizeforbank;
 //this is a trick to namespace an enum to avoid name collision without too much verbosity
 //could technically name the enum too but this is fine for now.
 namespace optimize_dp_flag {
-	enum : int {
-		NONE,	//don't optimize
-		RAM,	//bank 7E only (always uses dp base)
-		ALWAYS	//bank 00-3F[|80] and 7E (always uses dp base)
-	};
+    enum : int {
+        NONE,    //don't optimize
+        RAM,    //bank 7E only (always uses dp base)
+        ALWAYS    //bank 00-3F[|80] and 7E (always uses dp base)
+    };
 }
 
 extern int optimize_dp;
@@ -116,11 +116,11 @@ extern bool set_optimize_dp;
 extern bool set_optimize_address;
 
 namespace optimize_address_flag {
-	enum : int {
-		DEFAULT,//simply use optimizeforbank
-		RAM,	//default+bank 7E only RAM address < $2000
-		MIRRORS	//ram+if optimizeforbank is 00-3F[|80] and address < $8000
-	};
+    enum : int {
+        DEFAULT,//simply use optimizeforbank
+        RAM,    //default+bank 7E only RAM address < $2000
+        MIRRORS    //ram+if optimizeforbank is 00-3F[|80] and address < $8000
+    };
 }
 
 extern int optimize_address;

@@ -306,7 +306,7 @@ namespace asar {
     #undef snestopc
     export int snestopc_pick(int addr)
     {
-	    return snestopc(addr);
+        return snestopc(addr);
     }
 
     export bool asar_init()

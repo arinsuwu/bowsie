@@ -30,13 +30,13 @@ org !owrev_bank_4_freespace         ;   as I said above, right now we can afford
 ; Sprite loader
 custom_ow_sprite_load:
 ; this part is basically OWRev
-	LDA [$CE],y                     ;\  restore code
-	STA $05                         ;/
-	LDA $0100|!addr                 ;\
-	SEC                             ; |
-	SBC #$0C                        ; | verify that we're actually on the OW
-	CMP #$03                        ; |
-	BCC .main                       ;/
+    LDA [$CE],y                     ;\  restore code
+    STA $05                         ;/
+    LDA $0100|!addr                 ;\
+    SEC                             ; |
+    SBC #$0C                        ; | verify that we're actually on the OW
+    CMP #$03                        ; |
+    BCC .main                       ;/
     LDA $05
     JML $02A865|!bank
 

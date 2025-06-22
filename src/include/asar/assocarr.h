@@ -42,8 +42,8 @@
 
 //just a helper for initializer list
 template<typename T1, typename T2> struct pair{
-	T1 first;
-	T2 second;
+    T1 first;
+    T2 second;
 };
 
 template<typename right> class assocarr {
@@ -61,231 +61,231 @@ int lastid;
 
 void collectgarbage(const char * ifnotmatch=nullptr)
 {
-	if (lastid==-1) return;
-	if (ifnotmatch && !strcmp(indexes[lastid], ifnotmatch)) return;
-	if (!memcmp(ptr[lastid], lastone, sizeof(right)))
-	{
-		int tmpid=lastid;
-		lastid=-1;
-		remove(indexes[tmpid]);
-	}
-	lastid=-1;
+    if (lastid==-1) return;
+    if (ifnotmatch && !strcmp(indexes[lastid], ifnotmatch)) return;
+    if (!memcmp(ptr[lastid], lastone, sizeof(right)))
+    {
+        int tmpid=lastid;
+        lastid=-1;
+        remove(indexes[tmpid]);
+    }
+    lastid=-1;
 }
 
 right& rawadd(const char * index, bool collect)
 {
-	collectgarbage(index);
-	int loc=0;
-	int skip= (int)bitround((unsigned int)num);
-	while (skip)
-	{
-		int dir;
-		if (loc>=num) dir=1;
-		else dir=strcmp(indexes[loc], index);
-		if (!dir) return ptr[loc][0];
-		skip/=2;
-		if (dir>0) loc-=skip;
-		else loc+=skip;
-		if (loc<0)
-		{
-			loc=0;
-			break;
-		}
-	}
-	if (loc<num && strcmp(indexes[loc], index)<0) loc++;
-	if (num==bufferlen)
-	{
-		if (!num) bufferlen=1;
-		else bufferlen*=2;
-		ptr=(right**)realloc(ptr, sizeof(right*)*(size_t)bufferlen);
-		indexes=(const char**)realloc(indexes, sizeof(const char *)*(size_t)bufferlen);
-	}
-	num++;
-	memmove(indexes+loc+1, indexes+loc, sizeof(const char *)*(size_t)(num-loc-1));
-	memmove(ptr+loc+1, ptr+loc, sizeof(right*)*(size_t)(num-loc-1));
-	indexes[loc]= duplicate_string(index);
-	ptr[loc]=(right*)malloc(sizeof(right));
-	memset(ptr[loc], 0, sizeof(right));
-	new(ptr[loc]) right;
-	if (collect)
-	{
-		lastid=loc;
-		memcpy(lastone, ptr[loc], sizeof(right));
-	}
-	return ptr[loc][0];
+    collectgarbage(index);
+    int loc=0;
+    int skip= (int)bitround((unsigned int)num);
+    while (skip)
+    {
+        int dir;
+        if (loc>=num) dir=1;
+        else dir=strcmp(indexes[loc], index);
+        if (!dir) return ptr[loc][0];
+        skip/=2;
+        if (dir>0) loc-=skip;
+        else loc+=skip;
+        if (loc<0)
+        {
+            loc=0;
+            break;
+        }
+    }
+    if (loc<num && strcmp(indexes[loc], index)<0) loc++;
+    if (num==bufferlen)
+    {
+        if (!num) bufferlen=1;
+        else bufferlen*=2;
+        ptr=(right**)realloc(ptr, sizeof(right*)*(size_t)bufferlen);
+        indexes=(const char**)realloc(indexes, sizeof(const char *)*(size_t)bufferlen);
+    }
+    num++;
+    memmove(indexes+loc+1, indexes+loc, sizeof(const char *)*(size_t)(num-loc-1));
+    memmove(ptr+loc+1, ptr+loc, sizeof(right*)*(size_t)(num-loc-1));
+    indexes[loc]= duplicate_string(index);
+    ptr[loc]=(right*)malloc(sizeof(right));
+    memset(ptr[loc], 0, sizeof(right));
+    new(ptr[loc]) right;
+    if (collect)
+    {
+        lastid=loc;
+        memcpy(lastone, ptr[loc], sizeof(right));
+    }
+    return ptr[loc][0];
 }
 
 int find_i(const char * index) const
 {
-	int loc=0;
-	int skip=(int)bitround((unsigned int)num);
-	while (skip)
-	{
-		int dir;
-		if (loc>=num) dir=1;
-		else dir=strcmp(indexes[loc], index);
-		if (!dir) return loc;
-		skip/=2;
-		if (dir>0) loc-=skip;
-		else loc+=skip;
-		if (loc<0) return -1;
-	}
-	return -1;
+    int loc=0;
+    int skip=(int)bitround((unsigned int)num);
+    while (skip)
+    {
+        int dir;
+        if (loc>=num) dir=1;
+        else dir=strcmp(indexes[loc], index);
+        if (!dir) return loc;
+        skip/=2;
+        if (dir>0) loc-=skip;
+        else loc+=skip;
+        if (loc<0) return -1;
+    }
+    return -1;
 }
 
 public:
 
 bool exists(const char * index) const
 {
-	return find_i(index)>=0;
+    return find_i(index)>=0;
 }
 
 right& find(const char * index) const
 {
-	return ptr[find_i(index)][0];
+    return ptr[find_i(index)][0];
 }
 
 right& create(const char * index)
 {
-	return rawadd(index, false);
+    return rawadd(index, false);
 }
 
 void remove(const char * index)
 {
-	collectgarbage();
-	int loc=0;
-	int skip= (int)bitround((unsigned int)num);
-	while (skip)
-	{
-		int dir;
-		if (loc>=num) dir=1;
-		else dir=strcmp(indexes[loc], index);
-		if (!dir)
-		{
-			free((void*)indexes[loc]);
-			ptr[loc]->~right();
-			free(ptr[loc]);
-			memmove(indexes+loc, indexes+loc+1, sizeof(const char *)*(size_t)(num-loc-1));
-			memmove(ptr+loc, ptr+loc+1, sizeof(right*)*(size_t)(num-loc-1));
-			num--;
-			if (num==bufferlen/2)
-			{
-				bufferlen/=2;
-				ptr=(right**)realloc(ptr, sizeof(right*)*(size_t)bufferlen);
-				indexes=(const char**)realloc(indexes, sizeof(const char *)*(size_t)bufferlen);
-			}
-			return;
-		}
-		skip/=2;
-		if (dir>0) loc-=skip;
-		else loc+=skip;
-		if (loc<0) return;
-	}
+    collectgarbage();
+    int loc=0;
+    int skip= (int)bitround((unsigned int)num);
+    while (skip)
+    {
+        int dir;
+        if (loc>=num) dir=1;
+        else dir=strcmp(indexes[loc], index);
+        if (!dir)
+        {
+            free((void*)indexes[loc]);
+            ptr[loc]->~right();
+            free(ptr[loc]);
+            memmove(indexes+loc, indexes+loc+1, sizeof(const char *)*(size_t)(num-loc-1));
+            memmove(ptr+loc, ptr+loc+1, sizeof(right*)*(size_t)(num-loc-1));
+            num--;
+            if (num==bufferlen/2)
+            {
+                bufferlen/=2;
+                ptr=(right**)realloc(ptr, sizeof(right*)*(size_t)bufferlen);
+                indexes=(const char**)realloc(indexes, sizeof(const char *)*(size_t)bufferlen);
+            }
+            return;
+        }
+        skip/=2;
+        if (dir>0) loc-=skip;
+        else loc+=skip;
+        if (loc<0) return;
+    }
 }
 
 void move(const char * from, const char * to)
 {
-	collectgarbage();
-	int frompos=find_i(from);
-	int topos=0;
-	int skip=bitround(num);
-	while (skip)
-	{
-		int dir;
-		if (topos>=num) dir=1;
-		else dir=strcmp(indexes[topos], to);
-		if (!dir) return;
-		skip/=2;
-		if (dir>0) topos-=skip;
-		else topos+=skip;
-		if (topos<0)
-		{
-			topos=0;
-			break;
-		}
-	}
-	if (topos<num && strcmp(indexes[topos], to)<0) topos++;
-	right * tmp=ptr[frompos];
-	if (topos==frompos || topos==frompos+1)
-	{
-		free((void*)indexes[frompos]);
-		indexes[frompos]= duplicate_string(to);
-	}
-	else if (topos>frompos)
-	{
-		free((void*)indexes[frompos]);
-		memmove(indexes+frompos, indexes+frompos+1, sizeof(const char *)*(topos-frompos-1));
-		memmove(ptr+frompos, ptr+frompos+1, sizeof(right*)*(topos-frompos-1));
-		ptr[topos-1]=tmp;
-		indexes[topos-1]= duplicate_string(to);//I wonder what the fuck I'm doing.
-	}
-	else
-	{
-		free((void*)indexes[frompos]);
-		memmove(indexes+topos+1, indexes+topos, sizeof(const char *)*(frompos-topos));
-		memmove(ptr+topos+1, ptr+topos, sizeof(right*)*(frompos-topos));
-		ptr[topos]=tmp;
-		indexes[topos]= duplicate_string(to);
-	}
+    collectgarbage();
+    int frompos=find_i(from);
+    int topos=0;
+    int skip=bitround(num);
+    while (skip)
+    {
+        int dir;
+        if (topos>=num) dir=1;
+        else dir=strcmp(indexes[topos], to);
+        if (!dir) return;
+        skip/=2;
+        if (dir>0) topos-=skip;
+        else topos+=skip;
+        if (topos<0)
+        {
+            topos=0;
+            break;
+        }
+    }
+    if (topos<num && strcmp(indexes[topos], to)<0) topos++;
+    right * tmp=ptr[frompos];
+    if (topos==frompos || topos==frompos+1)
+    {
+        free((void*)indexes[frompos]);
+        indexes[frompos]= duplicate_string(to);
+    }
+    else if (topos>frompos)
+    {
+        free((void*)indexes[frompos]);
+        memmove(indexes+frompos, indexes+frompos+1, sizeof(const char *)*(topos-frompos-1));
+        memmove(ptr+frompos, ptr+frompos+1, sizeof(right*)*(topos-frompos-1));
+        ptr[topos-1]=tmp;
+        indexes[topos-1]= duplicate_string(to);//I wonder what the fuck I'm doing.
+    }
+    else
+    {
+        free((void*)indexes[frompos]);
+        memmove(indexes+topos+1, indexes+topos, sizeof(const char *)*(frompos-topos));
+        memmove(ptr+topos+1, ptr+topos, sizeof(right*)*(frompos-topos));
+        ptr[topos]=tmp;
+        indexes[topos]= duplicate_string(to);
+    }
 }
 
 void reset()
 {
-	for (int i=0;i<num;i++)
-	{
-		free((void*)indexes[i]);
-		ptr[i]->~right();
-		free(ptr[i]);
-	}
-	free(indexes);
-	free(ptr);
-	indexes=nullptr;
-	ptr= nullptr;
-	num=0;
-	bufferlen=0;
-	lastid=-1;
+    for (int i=0;i<num;i++)
+    {
+        free((void*)indexes[i]);
+        ptr[i]->~right();
+        free(ptr[i]);
+    }
+    free(indexes);
+    free(ptr);
+    indexes=nullptr;
+    ptr= nullptr;
+    num=0;
+    bufferlen=0;
+    lastid=-1;
 }
 
 assocarr()
 {
-	indexes= nullptr;
-	ptr= nullptr;
-	num=0;
-	bufferlen=0;
-	lastid=-1;
+    indexes= nullptr;
+    ptr= nullptr;
+    num=0;
+    bufferlen=0;
+    lastid=-1;
 }
 
 assocarr(std::initializer_list<pair<const char *, right>> list)
 {
-	indexes= nullptr;
-	ptr= nullptr;
-	num=0;
-	bufferlen=0;
-	lastid=-1;
-	
-	for(auto &item : list){
-		rawadd(item.first, true) = item.second;
-	}
+    indexes= nullptr;
+    ptr= nullptr;
+    num=0;
+    bufferlen=0;
+    lastid=-1;
+    
+    for(auto &item : list){
+        rawadd(item.first, true) = item.second;
+    }
 }
 
 ~assocarr()
 {
-	reset();
+    reset();
 }
 
 right& operator[](const char * index)
 {
-	return rawadd(index, true);
+    return rawadd(index, true);
 }
 
 //void(*func)(const char * key, right& value)
 template<typename t> void each(t func)
 {
-	collectgarbage();
-	for (int i=0;i<num;i++)
-	{
-		func(indexes[i], ptr[i][0]);
-	}
+    collectgarbage();
+    for (int i=0;i<num;i++)
+    {
+        func(indexes[i], ptr[i][0]);
+    }
 }
 
 //void debug(){puts("");for(int i=0;i<num;i++)puts(indexes[i]);}
@@ -293,33 +293,33 @@ template<typename t> void each(t func)
 #ifdef SERIALIZER
 void serialize(serializer & s)
 {
-	collectgarbage();
-	if (s.serializing)
-	{
-		s(num);
-		s(bufferlen);
-		for (int i=0;i<num;i++)
-		{
-			s(ptr[i][0]);
-			s(indexes[i]);
-		}
-	}
-	else
-	{
-		reset();
-		s(num);
-		s(bufferlen);
-		ptr=(right**)malloc(sizeof(right*)*bufferlen);
-		indexes=(const char**)malloc(sizeof(const char *)*bufferlen);
-		for (int i=0;i<num;i++)
-		{
-			ptr[i]=(right*)malloc(sizeof(right));
-			memset(ptr[i], 0, sizeof(right));
-			new(ptr[i]) right;
-			s(ptr[i][0]);
-			s(indexes[i]);
-		}
-	}
+    collectgarbage();
+    if (s.serializing)
+    {
+        s(num);
+        s(bufferlen);
+        for (int i=0;i<num;i++)
+        {
+            s(ptr[i][0]);
+            s(indexes[i]);
+        }
+    }
+    else
+    {
+        reset();
+        s(num);
+        s(bufferlen);
+        ptr=(right**)malloc(sizeof(right*)*bufferlen);
+        indexes=(const char**)malloc(sizeof(const char *)*bufferlen);
+        for (int i=0;i<num;i++)
+        {
+            ptr[i]=(right*)malloc(sizeof(right));
+            memset(ptr[i], 0, sizeof(right));
+            new(ptr[i]) right;
+            s(ptr[i][0]);
+            s(indexes[i]);
+        }
+    }
 }
 #endif
 #define SERIALIZER_BANNED
