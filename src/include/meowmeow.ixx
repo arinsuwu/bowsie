@@ -40,7 +40,7 @@ namespace meOWmeOW
         bool init_meowmeow(Rom& rom)
         {
             // Verify if there is an extra byte table already in ROM.
-            rom.old_extra_bytes = new char[0x7F] { };
+            rom.old_extra_bytes = new char[0x80] { 0x03 };
             const int extra_byte_loc = snestopc_pick( (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR)&0xFF) | \
                                                       (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+1)&0xFF)<<8 | \
                                                       (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+2)&0xFF)<<16 )+HEADER_SIZE;
@@ -49,7 +49,7 @@ namespace meOWmeOW
                 // Extra byte table exists, acquire it from the ROM.
                 rom.rom_data.clear();
                 rom.rom_data.seekg(extra_byte_loc);
-                rom.rom_data.read(rom.old_extra_bytes, 0x7F);
+                rom.rom_data.read(rom.old_extra_bytes, 0x80);
 
                 if(rom.rom_data.rdstate() != ios::goodbit)
                     return false;
@@ -57,7 +57,7 @@ namespace meOWmeOW
             else
             {
                 // Extra byte table does not exist, initialize it to 0x04 for backwards compatibility (three bytes for number/position + 1 extra)
-                for(int i=0;i<0x7F;++i)
+                for(int i=1;i<0x80;++i)
                     rom.old_extra_bytes[i] = 0x04;
             }
 
@@ -78,7 +78,7 @@ namespace meOWmeOW
             bool run_meowmeow = false;
             for(int i=0;i<0x7F;++i)
             {
-                if(rom.old_extra_bytes[i] != rom.new_extra_bytes[i])
+                if(rom.old_extra_bytes[i+1] != rom.new_extra_bytes[i])
                 {
                     run_meowmeow = true;
                     break;
@@ -145,7 +145,7 @@ namespace meOWmeOW
 
                     // Verify if this is a sprite which changed.
                     int sprite_number = sprite_xnnnnnnn&0x7F;
-                    int old_extra = rom.old_extra_bytes[sprite_number-1]-0x03;
+                    int old_extra = rom.old_extra_bytes[sprite_number]-0x03;
                     int new_extra = rom.new_extra_bytes[sprite_number-1]-0x03;
 
                     if(old_extra <= new_extra)
@@ -157,12 +157,16 @@ namespace meOWmeOW
                         // More extra bytes: fill new with 00
                         for(int i=old_extra; i<new_extra; ++i)
                             new_sprite_data.push_back(0x00);
+                        
+                        bytes_processed += new_extra+1;
                     }
                     else    // Less extra bytes: only copy the required ones
+                    {
                         for(int i=0; i<new_extra; ++i)
                             new_sprite_data.push_back((uint8_t)(rom.rom_data.get()));
 
-                    bytes_processed += new_extra+1;
+                        bytes_processed += old_extra+1;
+                    }
                 }
                 
                 // Save table of corrected sprites

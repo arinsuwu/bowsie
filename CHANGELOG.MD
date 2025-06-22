@@ -4,6 +4,7 @@ BOWSIE v1.10
 ___BOWSIE___
 - Added support for arbitrarily sized extra bytes, which you may know from level sprites as the "Extension" field. Thanks to FuSoYa for adding this feature to Lunar Magic!
   - This feature needs Lunar Magic 3.51 or newer to work.
+    - Note that LM 3.51 has a bug where sprite ID 00 is considered valid in the extra bytes table, so therefore BOWSIE code is currently shifted to keep this phantom sprite in mind. This is subject to change once FuSoYa fixes that, so sprite ID 00 is still unusable.
   - BOWSIE will now enable two 8-bit extra bytes to form a full-sized extra byte, the way OW Revolution sprites work.
   - Extra bytes used are controlled by the `!extra` define in a sprite's ASM file. For example, `!extra = 5` will enable five extra bytes.
   - Added two tables, `!ow_sprite_extra_1` and `!ow_sprite_extra_2`, to access four 8-bit extra bytes.

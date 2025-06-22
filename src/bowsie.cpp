@@ -1094,7 +1094,15 @@ namespace off\n", settings.method, sprite_labelname, sprite_filename, sprite_num
     if(ow_rev)
         full_patch.append("\npushpc\norg $04FFFF\n    RTL\npullpc");
     if(!rom.inline_patch(tool_folder, full_patch.c_str()))
+    {
+        if(settings.verbose)
+        {
+            auto system_prints = asar_getprints(&asar_errcount);
+            for(int i=0;i<asar_errcount;++i)
+                println("Captured print while inserting the sprite system: {}", system_prints[i]);
+        }
         return error("Something went wrong while applying the sprite system. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
+    }
 
     // meOWmeOW, if asked
     if(settings.meowmeow)
