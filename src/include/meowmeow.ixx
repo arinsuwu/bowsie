@@ -157,16 +157,19 @@ namespace meOWmeOW
                         // More extra bytes: fill new with 00
                         for(int i=old_extra; i<new_extra; ++i)
                             new_sprite_data.push_back(0x00);
-                        
-                        bytes_processed += new_extra+1;
                     }
-                    else    // Less extra bytes: only copy the required ones
+                    else
                     {
+                        // Less extra bytes: only copy the required ones
                         for(int i=0; i<new_extra; ++i)
                             new_sprite_data.push_back((uint8_t)(rom.rom_data.get()));
 
-                        bytes_processed += old_extra+1;
+                        // Discard the rest of the old extra bytes
+                        for(int i=new_extra; i<old_extra; ++i)
+                            rom.rom_data.get();
                     }
+
+                    bytes_processed += new_extra+1;
                 }
                 
                 // Save table of corrected sprites
