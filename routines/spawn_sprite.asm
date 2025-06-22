@@ -42,11 +42,6 @@ endif
     STA !ow_sprite_y_pos,x
     LDA $06
     STA !ow_sprite_z_pos,x
-    LDA $08
-    if !bowsie_owrev == 0
-        AND #$00FF
-    endif
-    STA !ow_sprite_extra_bits,x
     STZ !ow_sprite_init,x
     STZ !ow_sprite_speed_x,x
     STZ !ow_sprite_speed_x_acc,x

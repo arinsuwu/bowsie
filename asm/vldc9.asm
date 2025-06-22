@@ -16,7 +16,7 @@
 
 padbyte $EA
 
-org $009AA4         ;   nuke jump to original ow sprite load (always, even if kept. boy slow down running this bs routine...)
+org $009AA4         ;   nuke jump to original ow sprite load
     BRA $02 : NOP #2
 
 org $04840D         ;   swap the order in which the player is drawn and the sprites are processed
@@ -33,13 +33,20 @@ org $00A165         ;   jump to new ow sprite load (this one will run in gamemod
 org $04DBA3         ;   jump to new ow sprite load (this one will run in map transitions)
     JMP.w custom_ow_sprite_load_sm
 
-org $04F675     ;   nuke original ow sprite load (which runs in gamemode $05)
+org $04F625         ;   nuke original ow sprite load (which runs in gamemode $05)
     pad $04F6F8
 
 ;---
 
+; Enable arbitrarily sized extra bytes
+org $0DE18C
+    autoclean dl extra_byte_table
+    db $42
+
+;---
+
 ; main hijack, within vanilla freespace
-org $04F675|!bank
+org $04F625|!bank
 custom_ow_sprite_load_main:
     if !sa1
         LDA.b #.main
@@ -68,8 +75,8 @@ custom_ow_sprite_load_main:
     STA $6B                     ;/
 
     CLC
-    LDY #$00                    ; loop counter = 0
-.sprite_load_loop               ; loop for decoding sprite data and spawning sprite.
+    LDY #$00                    ;   loop counter = 0
+.sprite_load_loop               ;   loop for decoding sprite data and spawning sprite.
     LDA [$6B],y                 ;\  get first word of sprite data (yyyx xxxx  xnnn nnnn)
     BEQ .end_spawning           ; | 0x0000 indicates end of data
     AND #$007F                  ; |
@@ -83,34 +90,53 @@ custom_ow_sprite_load_main:
     STA $02                     ;/  store x position (in pixels) in $02
     INY
 
-    LDA [$6B],y                 ;\ get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
+    LDA [$6B],y                 ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
     AND #$07E0                  ; | mask out y bits:      -----yyy yyy-----
     LSR #2                      ; | shift y bits down by 2 (same as y multiplied by 8 to get pixels from 8x8)
-    STA $04                     ;/ store y position (in pixel) in $04
+    STA $04                     ;/  store y position (in pixel) in $04
 
-    LDA [$6B],y                 ;\ get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
+    LDA [$6B],y                 ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
     AND #$F800                  ; | mask out z bits: zzzzz--- --------
     XBA                         ; | swap bytes:        -------- zzzzz---
-    STA $06                     ;/ store z position (in pixel) in $06
-    
-    INY #2                      ;\ 
-    PHY                         ; | gotta save Y if we'll use this routine
-    LDA [$6B],y                 ; | get high word or sprite data (____ ____  eeee eeee)
-    STA $08                     ;/ store extra byte to $08 (and garbage data to $09)
+    STA $06                     ;/  store z position (in pixel) in $06
 
-                                ;\ Routine to first spawn the sprite and put data into sprite tables:
-                                ; | Input (16 bit):
-    %spawn_sprite()             ; |      $00 = Sprite number
-                                ; |      $02 = Sprite X position (in pixel)
-                                ; |      $04 = Sprite Y position (in pixel)
-                                ; |      $06 = Sprite Z position (in pixel)
-                                ; |      $08 = Extra Byte (not word!)
-                                ; |
-    PLY                         ; | Output:
-    BCC .end_spawning           ; |      Carry: Clear = No Spawn, Set = Spawn
-                                ;/      Y:      Sprite Index (for RAM addresses) 
-    INY
-    CLC
+    PHY
+    %spawn_sprite()             ;   attempt to spawn the sprite
+    STY $09
+    PLY
+    BCC .end_spawning           ;   return if no more slots where to spawn a sprite at
+
+    INY #2                      ;   move to the extra bytes
+    LDX $00                     ;\
+    LDA.l extra_byte_table,x    ; |
+    AND #$00FF                  ; | if there's no extra bytes (so only three bytes),
+    SBC #$0003                  ; | move on
+    CLC                         ; |
+    BEQ .sprite_load_loop       ;/
+    CMP #$0005                  ;\  if there's more than 4 extra bytes,
+    BCS .extra_byte_ptr         ;/  put a pointer instead
+
+.regular
+    STZ $00
+    STZ $02
+    SEP #$20
+    STA $08
+
+    LDX #$00                    ;\
+-   LDA [$6B],y                 ; |
+    STA $00,x                   ; | loop through the amount of extra bytes:
+    INY                         ; | extract them in $00-$03
+    INX                         ; | the non-filled values initialize to 00
+    CPX $08                     ; |
+    BCC -                       ;/
+
+    LDX $09                     ;\
+    REP #$21                    ; |
+    LDA $00                     ; | store retrieved extra bytes in the extra byte tables
+    STA !ow_sprite_extra_1,x    ; |
+    LDA $02                     ; |
+    STA !ow_sprite_extra_2,x    ;/
+
     BRA .sprite_load_loop
 
 .end_spawning
@@ -121,6 +147,26 @@ custom_ow_sprite_load_main:
     else
         RTS
     endif
+
+.extra_byte_ptr
+    STA $00
+    LDX $09
+    TYA                         ;\
+    CLC                         ; |
+    ADC $6B                     ; |
+    STA !ow_sprite_extra_1,x    ; | insert pointer to extra bytes:
+    LDA $6D                     ; | now contained in the extra byte tables
+    ADC #$0000                  ; |
+    AND #$00FF                  ; |
+    STA !ow_sprite_extra_2,x    ;/
+    TYA                         ;\
+    ADC $00                     ; | offset the next slots adequately
+    TAY                         ;/
+.done_extra
+    JMP .sprite_load_loop
+
+print "$", hex(pc())
+assert pc() <= $04F6F8|!bank
 
 ;---
 
@@ -266,4 +312,10 @@ clear_ram:
     PLX
     RTL
 
+;---
+
+freedata
+extra_byte_table:
+    db $03                      ;   sprite 00 (fixes lm bug)
+    incbin "extra_size.bin"
 

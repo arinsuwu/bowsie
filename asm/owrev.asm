@@ -20,8 +20,11 @@ org $0480F2+4                       ;   four bytes reserved for custom OW sprite
     RTL
 
 if read1($0EF30F) == $42
-    org read3($0EF30C)+256          ;   enable 2 extra bytes (if the table exists only)
-        for i = 0..256 : db $05 : endfor
+    org read3($0EF30C)+256          ;   insert extra size table
+    extra_byte_table:
+        db $03
+            incbin "extra_size.bin"
+        for i = 128..256 : db $03 : endfor
 endif
 
 ;---
@@ -66,9 +69,10 @@ endif
     AND #$01                        ; | store Y position high byte
     ORA $0A                         ; |
     STA.w !ow_sprite_y_pos+1,x      ;/
-    REP #$20
+    REP #$21
     LDA $00                         ;\  store X position (wow, if only Y pos were this simple!)
     STA !ow_sprite_x_pos,x          ;/
+
     STZ !ow_sprite_speed_x,x        ;\
     STZ !ow_sprite_speed_y,x        ; |
     STZ !ow_sprite_speed_z,x        ; |
@@ -85,17 +89,76 @@ endif
     STZ !ow_sprite_speed_y_acc,x    ; |
     STZ !ow_sprite_speed_z_acc,x    ; |
     STZ !ow_sprite_init,x           ;/
-    INY #3                          ;   get the first two extension bytes
-    LDA [$CE],y                     ;\  store the extra byte. when using OWRev we actually have a word
-    STA !ow_sprite_extra_bits,x     ;/
-    DEY #2                          ;   correct this offset, for later
+
+wdm
+    INY #3                          ;   move to the extra bytes
+    PHX
+    LDX $05
+    if not(!sa1)
+        REP #$10
+    endif
+
+    LDA.l extra_byte_table,x        ;\
+    AND #$00FF                      ; | if there's no extra bytes (so only three bytes),
+    SBC #$0002                      ; | move on
+    BEQ .next_sprite                ;/
+    CMP #$0005                      ;\  if there's more than 4 extra bytes,
+    BCS .extra_byte_ptr             ;/  put a pointer instead
+
+.regular
+    STZ $0A
+    STZ $0C
     SEP #$20
+    STA $0E
+
+    LDX #$0000                  ;\
+-   LDA [$CE],y                 ; |
+    STA $0A,x                   ; | loop through the amount of extra bytes:
+    INY                         ; | extract them in $0A-$0D
+    INX                         ; | the non-filled values initialize to 00
+    CPX $0E                     ; |
+    BCC -                       ;/
+
+    if not(!sa1)
+        SEP #$10
+    endif
+    REP #$20
+    PLX                         ;\
+    LDA $0A                     ; |
+    STA !ow_sprite_extra_1,x    ; | store retrieved extra bytes in the extra byte tables
+    LDA $0C                     ; |
+    STA !ow_sprite_extra_2,x    ;/
+
+.next_sprite
+    SEP #$20
+    DEY #2                          ;   correct this offset, for later
     LDA $05                         ;\  store the sprite number
     STA !ow_sprite_num,x            ;/
     LDA $02
     STA !ow_sprite_load_index,x
     PLX
     JML $02A846|!bank               ;   return (we're back pretty soon either way)
+
+.extra_byte_ptr
+    STA $0A
+    if not(!sa1)
+        SEP #$10
+    endif
+    PLX
+
+    TYA                         ;\
+    CLC                         ; |
+    ADC $CE                     ; |
+    STA !ow_sprite_extra_1,x    ; | insert pointer to extra bytes:
+    LDA $D0                     ; | now contained in the extra byte tables
+    ADC #$0000                  ; |
+    AND #$00FF                  ; |
+    STA !ow_sprite_extra_2,x    ;/
+
+    TYA                         ;\
+    ADC $0A                     ; | offset the next slots adequately
+    TAY                         ;/
+    BRA .next_sprite
 
 ;---
 

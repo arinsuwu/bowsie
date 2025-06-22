@@ -29,15 +29,16 @@ endmacro
 %define_ow_sprite_table(ow_sprite_misc_3, 16B0)
 %define_ow_sprite_table(ow_sprite_misc_4, 16F0)
 %define_ow_sprite_table(ow_sprite_misc_5, 1730)
-%define_ow_sprite_table(ow_sprite_extra_bits, 1770)
 %define_ow_sprite_table(ow_sprite_speed_x_acc, 17B0)
 %define_ow_sprite_table(ow_sprite_speed_y_acc, 17F0)
 %define_ow_sprite_table(ow_sprite_speed_z_acc, 1830)
 %define_ow_sprite_table(ow_sprite_init, 1870)
+%define_ow_sprite_table(ow_sprite_extra_1, 1770)
+%define_ow_sprite_table(ow_sprite_extra_2, 18B0)
 
 ;   OW Revolution needs these
 %define_ow_sprite_table(ow_sprite_props, 1E02)
-%define_ow_sprite_table(ow_sprite_load_index, 1E32)
+%define_ow_sprite_table(ow_sprite_load_index, 1E42)
 
 if or(equal(!sa1, 1), equal(read4($02FFE2), $44535453))
     if !sa1
@@ -50,6 +51,9 @@ else
 endif
 
 ;   Flags
-%define_ow_sprite_table(ow_sprite_index, 1E42)
-%define_ow_sprite_table(ow_sprite_oam, 1E44)
-%define_ow_sprite_table(ow_sprite_oam_p, 1E46)
+%define_ow_sprite_table(ow_sprite_index, 1E82)
+%define_ow_sprite_table(ow_sprite_oam, 1E84)
+%define_ow_sprite_table(ow_sprite_oam_p, 1E86)
+
+!ow_sprite_extra_bits  #= !ow_sprite_extra_1            ;   this is kept for backwards compatibility
+

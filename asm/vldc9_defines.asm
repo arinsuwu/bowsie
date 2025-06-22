@@ -4,12 +4,12 @@
 incsrc bowsie_defines.asm       ; don't delete this! it's created during the tool run.
 
 !oam_start_p    = $0000
-!oam_start      = $00BC
+!oam_start      = $0100
 !oam_limit      = $01E8
 
 macro define_ow_sprite_table(name, address)
-        !<name>     #= $<address>|!addr
-        !<address>  #= !<name>
+    !<name>    #= $<address>|!addr
+    !<address> #= !<name>
 endmacro
 
 ;   Tables
@@ -28,12 +28,19 @@ endmacro
 %define_ow_sprite_table(ow_sprite_misc_3, 1708)
 %define_ow_sprite_table(ow_sprite_misc_4, 1738)
 %define_ow_sprite_table(ow_sprite_misc_5, 1768)
-%define_ow_sprite_table(ow_sprite_extra_bits, 1798)
 %define_ow_sprite_table(ow_sprite_speed_x_acc, 17C8)
 %define_ow_sprite_table(ow_sprite_speed_y_acc, 17F8)
 %define_ow_sprite_table(ow_sprite_speed_z_acc, 1828)
 %define_ow_sprite_table(ow_sprite_init, 188C)
+%define_ow_sprite_table(ow_sprite_extra_1, 0DE0)
+%define_ow_sprite_table(ow_sprite_extra_2, 0E10)
+; %define_ow_sprite_table(ow_sprite_extra_3, 0E40)
+; %define_ow_sprite_table(ow_sprite_extra_4, 0E70)
+
 ;   Flags
 %define_ow_sprite_table(ow_sprite_index, 1858)
 %define_ow_sprite_table(ow_sprite_oam, 185A)
 %define_ow_sprite_table(ow_sprite_oam_p, 185C)
+
+!ow_sprite_extra_bits  #= !ow_sprite_extra_1            ;   this is kept for backwards compatibility
+
