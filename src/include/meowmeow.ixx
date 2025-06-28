@@ -175,7 +175,16 @@ namespace meOWmeOW
                 // Save table of corrected sprites
                 ofstream(tool_folder+"asm/new_sprite_data.bin", ios::binary).write((char *)new_sprite_data.data(), new_sprite_data.size());
 
-                string meowmeow_patch = format("autoclean read3(${0:0>6X})\n\
+                string meowmeow_patch = format("if read1($00FFD5) == $23\n\
+    if read1($00FFD7) == $0D\n\
+        fullsa1rom\n\
+    else\n\
+        sa1rom\n\
+    endif\n\
+else\n\
+    lorom\n\
+endif\n\
+autoclean read3(${0:0>6X})\n\
 org ${0:0>6X}\n\
     autoclean dl new_sprite_data\n\n\
 freedata\n\
