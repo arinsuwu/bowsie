@@ -4,13 +4,38 @@
 
 incsrc bowsie_defines.asm       ; don't delete this! it's created during the tool run.
 
-!oam_start_p    = $0000
-!oam_start      = $00BC
-!oam_limit      = $01E8
+;   OAM definitions
+if !bowsie_maxtile
+    if !sa1
+        !oam_buffer            #= $400000
+        !oam_tilesize_buffer   #= $400000
+    else
+        !oam_buffer            #= $7F0000
+        !oam_tilesize_buffer   #= $7F0000
+    endif
+
+    !next_oam_slot              = "INY #4"
+    !next_oam_tilesize_slot     = "INY"
+    !adjacent_oam_slot          = $01
+endif
+
+;   Structs
+struct oam_buffer !oam_buffer
+    .x_pos: skip 1
+    .y_pos: skip 1
+    .tile:  skip 1
+    .props: skip 1
+endstruct align 4
+
+struct oam_tilesize_buffer !oam_buffer
+    .tile_sx:   skip 1
+endstruct align 1
 
 macro define_ow_sprite_table(name, address)
     !<name>     #= $<address>|!addr
     !<address>  #= !<name>
+
+    <name>      = $000000+!<address>
 endmacro
 
 ;   Tables

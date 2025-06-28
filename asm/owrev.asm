@@ -15,9 +15,25 @@ assert read4($048000) == $524F4659, "This needs OW Revolution to work."
 org $02A861                         ;   loads the actual OW sprites
     JML custom_ow_sprite_load
 
-org $0480F2+4                       ;   four bytes reserved for custom OW sprite code in OW Revolution
+org $0480F2
+    skip 4
+    ;   four bytes reserved for custom OW sprite code in OW Revolution
     JSR.w run_ow_sprite             ;   process sprites
     RTL
+
+    skip 4
+    ;   four bytes reserved for custom spawn sprite routine in OW Revolution
+    spawn_sprite_jml:               ;   This. is. Ugly.
+        %spawn_sprite() ;   JSL spawn_sprite
+        skip -4         ;   backtrack to the JSL
+        db $5C          ;   opcode for JML
+
+;---
+
+org $0480D2                         ;   mark custom sprite system in use (just to be safe)
+    db read1($0480D2)|$08
+
+;---
 
 if read1($0EF30F) == $42
     org read3($0EF30C)+256          ;   insert extra size table
@@ -29,7 +45,7 @@ endif
 
 ;---
 
-org !owrev_bank_4_freespace         ;   as I said above, right now we can afford bank 4 freespace
+org !owrev_bank_4_freespace|!bank   ;   as I said above, right now we can afford bank 4 freespace
 ; Sprite loader
 custom_ow_sprite_load:
 ; this part is basically OWRev
@@ -135,6 +151,32 @@ endif
     STA !ow_sprite_num,x            ;/
     LDA $02
     STA !ow_sprite_load_index,x
+
+    ;   Show sprites during fade-in.
+    PHY
+    REP #$20
+    if !sa1
+        SEP #$10
+    endif
+    PHB
+    LDA $1A
+    PHA
+
+    LDA $12,s                       ;\  recover true X position
+    STA $1A                         ;/
+    JSR execute_ow_sprite_init      ;   run sprite init routine
+    INC !ow_sprite_init,x           ;   mark initialization as done
+    JSR execute_ow_sprite           ;   run sprite main once
+
+    PLA                             ;\  restore X position used in sprite load
+    STA $1A                         ;/
+    PLB
+    if !sa1
+        REP #$10
+    endif
+    SEP #$20
+    PLY
+
     PLX
     JML $02A846|!bank               ;   return (we're back pretty soon either way)
 
@@ -168,10 +210,6 @@ run_ow_sprite:
     LDA $9D                         ;\
     AND #$0002                      ; | OWRev uses bit 1 of $9D to skip sprite code completely
     BNE .skip_running_sprites       ;/
-    LDA #!oam_start                 ;\
-    STA !ow_sprite_oam              ; | set our start OAM slot values
-    LDA #!oam_start_p               ; |
-    STA !ow_sprite_oam_p            ;/
 
     LDX.b #(!bowsie_ow_slots-1)*2   ;\
 -   LDA !ow_sprite_num,x            ; | Main loop.
@@ -263,5 +301,5 @@ execute_ow_sprite_init:
 
 ;---
 
-assert pc() <= $04EF3E
+assert pc() <= $04EF3E|!bank
 

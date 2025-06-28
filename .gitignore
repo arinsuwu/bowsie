@@ -1,10 +1,11 @@
 .vscode/
-Graphics/
 ExGraphics/
+Graphics/
+misc_patches/
 OR/
-sysLMRestore/
 releases/
 sprites/
+sysLMRestore/
 uberasm/
 *.pal
 *.palmask
@@ -22,6 +23,4 @@ uberasm/
 *.bst
 *.bat
 list.txt
-tbl.asm
 known issues.txt
-Widescree*.asm

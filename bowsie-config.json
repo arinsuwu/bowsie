@@ -6,6 +6,7 @@
     "slots": 24,
 
     "method": "VLDC9",
+    "use_maxtile": true,
 
     "custom_dir": "test/main.asm",
     "bypass_ram_check": true

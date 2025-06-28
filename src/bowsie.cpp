@@ -112,6 +112,8 @@ struct Settings
     int slots;
     // Implementation used to process sprites
     string method;
+    // Enable MaxTile
+    bool use_maxtile;
     // Directory for custom sprites
     string custom_dir;
     // Ignore RAM boundary
@@ -128,7 +130,8 @@ struct Settings
     bool deserialize_json(Document* json, string* err_str)
     {
         bool status = true;
-        static const char * keys[] = {"verbose", "generate_map16", "slots", "method",
+        static const char * keys[] = {"verbose", "generate_map16", "meowmeow",
+                                      "slots", "method", "use_maxtile",
                                       "custom_dir", "bypass_ram_check"};
         *err_str = "Couldn't find key(s):\t\t\t\t";
         for(const char * key : keys)
@@ -180,6 +183,13 @@ struct Settings
             this->method = (*json)["method"].GetString();
             format_path(&(this->method));
         }
+        if(!(*json)["use_maxtile"].IsBool())
+        {
+            (*err_str).append("Incorrect data type for use_maxtile:\t\texpected Boolean\n");
+            status = false;
+        }
+        else
+            this->use_maxtile = (*json)["use_maxtile"].GetBool();
         if(!( (*json)["custom_dir"].IsNull() || (*json)["custom_dir"].IsString()))
         {
             (*err_str).append("Incorrect data type for custom_dir:\t\texpected Null or String\n");
@@ -573,9 +583,12 @@ void destroy_map16(string filename)
 //   Main function!!!
 // =======================================
 
-#define BOWSIE_USED_PTR 0x04EF3E  // must be freespace in bank 4
-#define MAGIC_CONSTANT 0x00CAC705 // 00cactus - refer to FE!N by Jacques Webster and Jordan Carter
+#define BOWSIE_USED_PTR 0x04EF3E        // must be freespace in bank 4
+#define MAGIC_CONSTANT 0x00CAC705       // 00cactus - refer to FE!N by Jacques Webster and Jordan Carter
 #define MAGIC_CONSTANT_WRITE ((MAGIC_CONSTANT&0xFF)<<24)|((MAGIC_CONSTANT&0xFF00)<<8)|((MAGIC_CONSTANT&0xFF0000)>>8)|((MAGIC_CONSTANT&0xFF000000)>>24)
+
+#define OWREV_HANDLER_PTR 0x0480F6      // space OR leaves for a jump to a custom sprite system
+#define OWREV_LOAD_HACK_PTR 0x02A861    // where the load sprites hijack for OR is located
 
 int main(int argc, char *argv[])
 {
@@ -628,12 +641,14 @@ int main(int argc, char *argv[])
                 println("Configuration file settings (bowsie_setings.json)");
                 println("  verbose\t\tDisplay all info per sprite inserted");
                 println("  generate_map16\tCreate .s16ov and .sscov files for LM display");
+                println("  meowmeow\t\tFix extra byte changes using meOWmeOW");
                 println("  slots\t\t\tAmount of OW sprites (max. 24)");
                 println("  method\t\tImplementation used to process sprites");
                 println("\t\t\t  - vldc9:   the system used in VLDC9");
                 println("\t\t\t  - katrina: Katrina's alternative RAM definitions for VLDC9");
                 println("\t\t\t  - owrev:   replace the OW Revolution system");
                 println("\t\t\t  - custom:  any user-specified handler");
+                println("  use_maxtile\t\tEnable MaxTile granphics routines");
                 println("Advanced settings (don't touch if you don't know what you're doing)");
                 println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
                 println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
@@ -715,10 +730,14 @@ int main(int argc, char *argv[])
     bool ow_rev = false;
     if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
     {
-        ow_rev = true;
-        settings.meowmeow = false;
         if(settings.verbose)
-            println("Overworld Revolution detected.\n");
+            println("Overworld Revolution detected.\n  meOwmeOW has been disabled.\n  MaxTile has been enabled.");
+
+        ow_rev = true;
+
+        // Settings hardcoded to OR
+        settings.meowmeow = false;
+        settings.use_maxtile = true;
     }
 
     /*
@@ -737,14 +756,11 @@ int main(int argc, char *argv[])
     if(settings.method!="vldc9" && settings.method!="katrina" &&  settings.method!="owrev" && settings.method!="custom")
         return error("Unknown insertion method: {}", settings.method);
 
-    // Misc ROM checks
-    // The OW save check is just customary. I'm sure it isn't needed, but hey, better safe than sorry.
+    // Misc. ROM checks
     if(rom.rom_size<0x100000)
         return error("This ROM is clean. Please edit it in Lunar Magic.");
     if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
         return error("Title mismatch. Is this ROM headered?");
-    if(rom.read<1>(0x049549)!=0x22 && !ow_rev)
-        return error("Please save the overworld at least once in Lunar Magic.");
 
     if(settings.verbose)
     {
@@ -752,6 +768,7 @@ int main(int argc, char *argv[])
         println("Running BOWSIE with");
         println("Slots:\t\t\t\t{}", settings.slots);
         println("Insertion method:\t\t{}", settings.method);
+        println("MaxTile:\t\t\t{}", settings.use_maxtile ? "Enabled" : "Disabled");
         println("meOWmeOW:\t\t\t{}", settings.meowmeow ? "Enabled" : "Disabled");
         println("RAM checks:\t\t\t{}", settings.bypass_ram_check ? "Ignored (!)" : "Enabled");
         println("Asar version: v{}.{}{}\n", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
@@ -765,7 +782,7 @@ int main(int argc, char *argv[])
     string tool_folder = filesystem::absolute(argv[0]).parent_path().string()+"/";
     string rom_name = filesystem::absolute(rom.rom_path).parent_path().string()+"/"+filesystem::path(rom.rom_path).stem().string();
 
-    string full_patch(format("incsrc \"{1}/asm/{0}_defines.asm\"\nincsrc \"{1}/asm/ssr.asm\"\nincsrc \"{1}/asm/macro.asm\"\n\n", settings.method, tool_folder));
+    string full_patch(format("incsrc \"{1}asm/{0}_defines.asm\"\nincsrc \"{1}asm/ssr.asm\"\nincsrc \"{1}asm/macro.asm\"\nincsrc \"{1}asm/maxtile_defines.asm\"\n\n", settings.method, tool_folder));
     {
         string tmp;
         // Insert the method
@@ -808,8 +825,16 @@ int main(int argc, char *argv[])
             clean_patch.append(format("autoclean read3(${0:0>6X})\norg ${0:0>6X}\n    dl $FFFFFF\n", BOWSIE_USED_PTR+clean_offset));
             clean_offset+=3;
         }
+        if(ow_rev)
+            if(rom.read<1>(OWREV_HANDLER_PTR)==0x20)
+                {
+                    clean_patch.append(format("\norg $04{:0>4X}\n    padbyte $00 : pad ${:0>6X}",
+                                              rom.read<1>(OWREV_LOAD_HACK_PTR+1)|((rom.read<1>(OWREV_LOAD_HACK_PTR+2)<<8)&0xFF00), BOWSIE_USED_PTR));
+                }
         if(!rom.inline_patch(tool_folder, clean_patch.c_str()))
             return error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata);
+        if(!rom.reload())
+            return error("An error ocurred while cleaning up.");
         else if(settings.verbose)
             println("Clean-up done.\n");
 
@@ -820,26 +845,29 @@ int main(int argc, char *argv[])
         rom.inline_patch(tool_folder, format("org ${:0>6X} : dd ${:0>8X}", BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE).c_str());
     }
 
-    // Check if custom OW sprites have been enabled.
-    if(rom.read<3>(0x0EF55D)==0xFFFFFF && !ow_rev)
-        return error("Custom OW sprites haven't been enabled in Lunar Magic. Enable them (Ctrl-Insert while in sprite edit mode) and run the tool again.");
-
     // BOWSIE-specific defines
     string defines(format("\
 !bowsie_ow_slots = {}\n\
 !bowsie_version = {}\n\
 !bowsie_subversion = {}\n\n\
 !bowsie_contiguous = {}\n\n\
-!sa1 = 0\n\
-!dp = $0000\n\
-!addr = $0000\n\
-!bank = $800000\n\
+!bowsie_maxtile = {}\n\n\
 if read1($00FFD5) == $23\n\
-    sa1rom\n\
+    if read1($00FFD7) == $0D\n\
+        fullsa1rom\n\
+    else\n\
+        sa1rom\n\
+    endif\n\
     !sa1 = 1\n\
     !dp = $3000\n\
     !addr = $6000\n\
     !bank = $000000\n\
+else\n\
+    lorom\n\
+    !sa1 = 0\n\
+    !dp = $0000\n\
+    !addr = $0000\n\
+    !bank = $800000\n\
 endif\n\n\
 !bowsie_owrev = 0\n\
 if read4($048000) == $524F4659\n\
@@ -848,11 +876,15 @@ endif\n\n\
 !bowsie_widescreen_ow = equal(read1($04FB2A), $5C)\n\
 if !bowsie_owrev\n\
     !bowsie_widescreen_ow = not(equal(read1($0480D3)&$30, $00))\n\
-endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : '0'));
+endif\n\n\
+optimize dp always\n\
+dpbase !dp\n\n\
+optimize address mirrors\n\
+bank auto\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : '0', settings.use_maxtile ? '1' : '0'));
 
     /*
-        these loops locate where certain code is inserted by overworld revolution.
-        since the patch has many variables, these hijack spots are NEVER fixed.
+        These loops locate where certain code is inserted by Overworld Revolution.
+        Since the patch has many variables, these hijack spots are NEVER fixed.
     */
     if(ow_rev)
     {
@@ -873,7 +905,7 @@ endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : 
     ofstream(tool_folder+"asm/bowsie_defines.asm").write(defines.c_str(), defines.size());
 
     // Shared sub-routines
-    string routine_macro(format("incsrc {}_defines.asm\n\n", settings.method));
+    string routine_macro(format("incsrc {}_defines.asm\nincsrc maxtile_defines.asm\n\n", settings.method));
     string routine_content("freecode cleaned\n\n");
     vector<string> routine_names;
     for(auto routine : filesystem::directory_iterator(tool_folder+"routines"))
@@ -981,6 +1013,7 @@ endif\n\n", settings.slots, VERSION, SUBVER, settings.method=="katrina" ? '1' : 
             if(!curr_sprite)
                 return error("Could not open sprite with number {:0>2X} and filename {}. Make sure the sprite exists and is in the sprites directory.", sprite_number, sprite_filename);
             string insert_sprites(format("incsrc {0}_defines.asm\n\
+incsrc maxtile_defines.asm\n\
 incsrc ssr.asm\n\
 incsrc macro.asm\n\
 namespace {1}\n\

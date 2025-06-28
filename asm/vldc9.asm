@@ -16,17 +16,27 @@
 
 padbyte $EA
 
-org $009AA4         ;   nuke jump to original ow sprite load
-    BRA $02 : NOP #2
+org $009AA4         ;   either prepare MaxTile or nuke jump to original ow sprite load
+    if !vldc9_maxtile
+        JSL maxtile_setup
+    else
+        BRA $02 : NOP #2
+    endif
+
+;---
 
 org $04840D         ;   swap the order in which the player is drawn and the sprites are processed
     JSR $862E
-    JSR $F708
+    JMP $F708
 org $04827E
     JMP $840D
 
+;---
+
 org $0091CA         ;   these addresses aren't cleared in the vanilla game, but we use them, so let's clear this
     JSL prepare_clear_ram
+
+;---
 
 org $00A165         ;   jump to new ow sprite load (this one will run in gamemode $0C)
     JML custom_ow_sprite_load_gm
@@ -38,10 +48,29 @@ org $04F625         ;   nuke original ow sprite load (which runs in gamemode $05
 
 ;---
 
+org $048292         ;   redirect OW ending to sync MaxTile buffer correctly (or just return, if disabled)
+    JMP.w run_ow_sprite_done_running
+
+org $00A169         ;   sync OAM correctly in map transitions (or restore code)
+    if !vldc9_maxtile
+        JSL maxtile_sync_buffer
+    elseif not(!sa1)
+        LDA #$F0
+        STA $3F
+    endif
+
+;---
+
+; LM Flags
+
 ; Enable arbitrarily sized extra bytes
 org $0DE18C
     autoclean dl extra_byte_table
     db $42
+
+; Disable LM from writing to OW sprite area
+org $0FFFE0
+    db read1($0FFFE0)&$F7
 
 ;---
 
@@ -165,34 +194,69 @@ custom_ow_sprite_load_main:
 .done_extra
     JMP .sprite_load_loop
 
-print "$", hex(pc())
 assert pc() <= $04F6F8|!bank
 
 ;---
 
+if !vldc9_maxtile
+    org $04F8A6|!bank
+        incsrc "maxtile.asm"
+
+    pad $058000|!bank
+endif
+
 org $04F76E|!bank
 run_ow_sprite:
-
 ; Main handler
 .main
-    PHB
     REP #$21
-    LDA #!oam_start
-    STA !ow_sprite_oam
-    LDA #!oam_start_p
-    STA !ow_sprite_oam_p
+    if not(!bowsie_maxtile)
+        LDA #!oam_start
+        STA !ow_sprite_oam
+        LDA #!oam_start_p
+        STA !ow_sprite_oam_p
+    endif
 
     LDX.b #!bowsie_ow_slots*2-2     ;\
 -   LDA !ow_sprite_num,x            ; | Main loop.
-    BEQ .no_sprite                  ; | Call execute_ow_sprite for all sprites where     
+    BEQ ..no_sprite                 ; | Call execute_ow_sprite for all sprites where
     LDA !ow_sprite_init,x           ; | !ow_sprite_num,x is not zero.
     BNE +                           ;/
     JSR execute_ow_sprite_init      ;\
     INC !ow_sprite_init,x           ; | Or, in case !ow_sprite_init,x is still zero, call execute_ow_sprite_init and then INC it.
-    BRA .no_sprite                  ;/
+    BRA ..no_sprite                 ;/
 
 +   JSR execute_ow_sprite
-.no_sprite
+..no_sprite
+    DEX #2
+    BPL -
+
+    SEP #$20
+
+.done_running
+    ; We need to get ahead of UberASMTool's jump to $008494.
+    ; This is a JMP. A JSR would return to $048413, which is PLB : RTL.
+    ; So, we simply restore the PLB and either jump to MaxTile syncing the buffer or
+    ; add the RTL directly.
+    PLB
+    if !vldc9_maxtile
+        JML maxtile_sync_buffer
+    else
+        RTL
+    endif
+
+.transition
+    PHB
+    REP #$21
+
+    LDX.b #!bowsie_ow_slots*2-2     ;\
+-   LDA !ow_sprite_num,x            ; |
+    BEQ ..no_sprite                 ; | Main loop.
+    JSR execute_ow_sprite_init      ; | Call execute_ow_sprite for all sprites where !ow_sprite_num,x is not zero.   
+    INC !ow_sprite_init,x           ; |
+    LDA !ow_sprite_num,x            ; |
+    JSR execute_ow_sprite           ;/
+..no_sprite
     DEX #2
     BPL -
 
@@ -204,18 +268,17 @@ return:
 ;---
 
 custom_ow_sprite_load:
+
 .gm
     JSR custom_ow_sprite_load_main
-    JSR run_ow_sprite_main
-    JSR run_ow_sprite_main
+    JSR run_ow_sprite_transition
     JSL $04D6E9|!bank
     JML $00A169|!bank
 .sm
     JSL clear_ram
     PHX
     JSR custom_ow_sprite_load_main
-    JSR run_ow_sprite_main
-    JSR run_ow_sprite_main
+    JSR run_ow_sprite_transition
     PLX
     LDA $1F11|!addr,x
     JMP $DBA6
@@ -311,6 +374,10 @@ clear_ram:
     SEP #$30
     PLX
     RTL
+
+;---
+
+assert pc() <= $04F882|!bank
 
 ;---
 

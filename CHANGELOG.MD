@@ -1,7 +1,14 @@
 BOWSIE v1.10
 ---
 ### Features
+Due to the sheer amount of changes, the regular changelog is now broken down in subsections of each change, instead of per overworld system.  
+
 ___BOWSIE___
+- You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
+- Added support for 6 and 8MB SA-1 ROMs.
+- BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
+
+___Extra bytes and meOWmeOW___
 - Added support for arbitrarily sized extra bytes, which you may know from level sprites as the "Extension" field. Thanks to FuSoYa for adding this feature to Lunar Magic!
   - This feature needs Lunar Magic 3.51 or newer to work.
     - Note that LM 3.51 has a bug where sprite ID 00 is considered valid in the extra bytes table, so therefore BOWSIE code is currently shifted to keep this phantom sprite in mind. This is subject to change once FuSoYa fixes that, so sprite ID 00 is still unusable.
@@ -9,26 +16,63 @@ ___BOWSIE___
   - Extra bytes used are controlled by the `!extra` define in a sprite's ASM file. For example, `!extra = 5` will enable five extra bytes.
   - Added two tables, `!ow_sprite_extra_1` and `!ow_sprite_extra_2`, to access four 8-bit extra bytes.
   - You're limited to eight extra bytes.
-- Added meOWmeOW, which will detect changes in extra bytes, similar to Akaginite's MeiMei.
-  - Added the `fix_extra` setting, which allows you to enable or disable meOWmeOW if so desired.
-  - meOWmeOW is disabled with OW Revolution. Sorry! Run PIXI after BOWSIE to fix any potential extra byte changes via MeiMei.
-- Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table `$0420`. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
+- Added *meOWmeOW*, which will detect changes in extra bytes, similar to Akaginite's *MeiMei*.
+  - Added the `meowmeow` setting, which allows you to enable or disable *meOWmeOW* if so desired.
+  - *meOWmeOW* is disabled with OW Revolution. Sorry! Run PIXI after BOWSIE to fix any potential extra byte changes via *MeiMei*.
+
+___MaxTile___
+- Added suport for SA-1 *MaxTile*.
+- Added support for OW Revolution's *MaxTile*.
+- Added support for a custom version (henceforth referred to as the *BOWSIE implementation*) of *MaxTile*, which implements said OAM slot allocation system, and rewrites the border player, the sprite border surrounding said player, the overworld player sprite, and the lives exchanger, to use the BOWSIE implementation.
+- Added `use_maxtile`, which enables the use of the *MaxTile* allocation system for OAM slots.
+  - This setting redirects `%get_draw_info()` to *MaxTile*'s routine to acquire slots with a determined priority.
+  - OW Revolution ROMs *always* use *MaxTile*.
+  - SA-1 can be set to not use *MaxTile* if you prefer the regular way around graphics routines. After all, SA-1 has Legacy mode and that arranges OAM at the very end either way.
+  - The BOWSIE implementation, just like the OW Revolution implementation, does not implement Legacy mode, as this is very taxing outside SA-1.
+  - The BOWSIE implementation does not support the event path fade effect.
+  - The BOWSIE implementation *cannot* be disabled once installed!
+- Note that *MaxTile* graphics routines move OAM slots with `INY`, *not* `DEY`!
+
+___Shared subroutine improvements___
+- Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
 - `%sub_horz_pos()` and `%sub_vert_pos()` now store the distance between player and sprite in scratch RAM `$0E`.
-- You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
+- Added `%erase_sprite()`. In it's simplest form, it just sets a sprite number to zero, but when using OW Revolution, it also marks the sprite to be reloaded correctly.
+
+___Macros___
+- Added three helper macros for hybrid *MaxTile* and regular graphics routines: `%maxtile_set_databank()`, which preserves and sets the data bank to the bank of the OAM buffer; `%maxtile_clear_databank()`, which restores the data bank, and `%maxtile_get_tilesize_index()`, which loads the index for the high table in Y. The former two do nothing when MaxTile is disabled. The latter uses the internal pointer to the tilesize table when MaxTile is enabled, and a traditional right shift by two when disabled.
+- Split the shadow macros between those which write to the OAM size table and those which don't, intended for use with `%finish_oam_write()`.
+
+___New labels and definitions___
+- In addition to regular `!ow_sprite_*` defines for tables, you can now use `ow_sprite_*` *labels* for tables. Not only are they there in case you prefer the latter: they are intended for hybrid graphics routines, so Asar's label parser assigns the adequate size.
+- Added `oam_buffer` and `oam_tilesize_buffer` structs, intended for graphics routines.
+  - `oam_buffer` includes four labels: `x_pos`, `y_pos`, `tile` and `props`.
+  - `oam_tilesize_buffer` includes one label: `tile_sx`.
+- Added `!next_oam_slot`, `!next_oam_tilesize_slot` and `!adjacent_oam_slot`, helper defines for hybrid graphics routines.
+  - `!next_oam_slot` and `!next_oam_tilesize_slot` move to the next allocated OAM slot.
+  - `!adjacent_oam_slot` is intended for writes to the next allocated OAM slot when not increasing the buffer.
+- Added a `maxtile_get_slot` label, to jump to the subroutine to acquire OAM slots using *MaxTile*, when you don't want to use `%get_draw_info()`.
+- The macros above mentioned include `bank` statements so Asar's label parser can optimize as necessary. This is especially required to not abuse size indicators in hybrid graphics routines.
+
+___Lunar Magic___
+- BOWSIE now sets a bit that indicates Lunar Magic to stop overwriting code in the `$04F625`-`$04F6F8` and `$04F8A6`-`$058000` areas. This will allow you to finally save the overworld without having to re-run BOWSIE!
+  - Note that this feature is not yet available as of Lunar Magic 3.51 and is awaiting a future release.
+
+___OW Revolution___
+- Added a missing table, `!ow_sprite_load_index`, which is the equivalent to level sprites' `!161A`: the index to the table used to determine whether a sprite should respawn.
+- Sprites now show when entering the overworld in fade-ins.
+
+___Contiguous table/Katrina's sprite system___
+- This system actually works now LOL
+
+___Deprecated features___
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.
   - `omtre_detect` was also removed as a consequence, as everything fits in vanilla freespace now!
 
-___OW Revolution___
-- The Map16 handler can now generate regular sprite Map16 data.
-- Added a missing table, `!ow_sprite_load_index`, which is the equivalent to level sprites' `!161A`: the index to the table used to determine whether a sprite should respawn.
-- Added `%erase_sprite()`. In it's simplest form, it just sets a sprite number to zero, but when using OW Revolution, it also marks the sprite to be reloaded correctly.
 
-___Non-OW Revolution___
-- __Katrina__: this system actually works now LOL
-
-### Fixes
+### Bug Fixes
 - Fixed a crash in the VLDC9 system when using sprite numbers `55-7F` -- the high byte of the index to the pointers was being lost.
-- Fixed reading garbage when the pointer to sprite data not inserted (equal to `$000000`). This was a regression issue introduced when I cleaned the code in my modified PIXI builds.
+- Fixed reading garbage when the pointer to sprite data was not inserted (equal to `$000000`). This was a regression issue introduced when I cleaned the code in my modified PIXI builds.
+- Fixed a freespace leak in bank 4 when using OW Revolution.
 - Fixed the vanilla shadow macro using a non-assigned OAM slot. Thanks to simoncaio for reporting this and helping me test the fix!
 - Fixed `%interact()` not taking a sprite's Z position into account. Thanks to simoncaio for making me realize this was the case!
 
