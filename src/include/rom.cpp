@@ -22,6 +22,12 @@ bool Rom::open_rom()
     return !(!rom_data);
 }
 
+bool Rom::reload()
+{
+    ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
+    return open_rom();
+}
+
 /*
     done(bool meowmeow) -> void: Close ROM input
     ---

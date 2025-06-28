@@ -25,6 +25,7 @@ struct Rom
     bool first_time;
 
     bool open_rom();
+    bool reload();
     void done(bool);
     bool inline_patch(string, const char *);
 
