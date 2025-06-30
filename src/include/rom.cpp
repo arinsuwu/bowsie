@@ -31,9 +31,12 @@ bool Rom::reload()
 /*
     done(bool meowmeow) -> void: Close ROM input
     ---
-    Input:  meowmeow indicates meOWmeOW ran
-    Output: patched ROM is now written to disk
-            raw_rom_data destroyed
+    Input:
+    * meowmeow indicates meOWmeOW ran
+
+    Output:
+    * patched ROM is now written to disk
+    * raw_rom_data destroyed
 */
 void Rom::done(bool meowmeow)
 {
@@ -49,10 +52,13 @@ void Rom::done(bool meowmeow)
 /*
     inline_patch(const char * patch_content) -> bool: Patch ROM
     ---
-    Input:  patch_content is a char with the patch to apply
-    Output: ./asm/tmp.asm contains the patch applied
-            returns true if the patch was successfully applied,
-            false otherwise
+    Input:
+    * patch_content is a char with the patch to apply
+
+    Output:
+    * ./asm/tmp.asm contains the patch applied
+    * returns true if the patch was successfully applied,
+    * false otherwise
 */
 bool Rom::inline_patch(string tool_folder, const char * patch_content)
 {

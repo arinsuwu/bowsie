@@ -3,11 +3,6 @@ BOWSIE v1.10
 ### Features
 Due to the sheer amount of changes, the regular changelog is now broken down in subsections of each change, instead of per overworld system.  
 
-___BOWSIE___
-- You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
-- Added support for 6 and 8MB SA-1 ROMs.
-- BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
-
 ___Extra bytes and meOWmeOW___
 - Added support for arbitrarily sized extra bytes, which you may know from level sprites as the "Extension" field. Thanks to FuSoYa for adding this feature to Lunar Magic!
   - This feature needs Lunar Magic 3.51 or newer to work.
@@ -62,7 +57,19 @@ ___OW Revolution___
 - Sprites now show when entering the overworld in fade-ins.
 
 ___Contiguous table/Katrina's sprite system___
-- This system actually works now LOL
+- This system has been "unofficialized". BOWSIE still ships with `katrina`, but now you have to set the `custom_method_name` setting to `katrina` to use it.
+
+___BOWSIE___
+- You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
+- When not choosing a custom method, BOWSIE now selects the adequate insertion method to use.
+- In addition to the two points above, BOWSIE now comes bundled with default settings. These are:
+  - Verbose mode disabled.
+  - Map16 generation enabled.
+  - meOWmeOW enabled.
+  - 32 slots when using OW Revolution and 24 otherwise.
+  - MaxTile enabled.
+- Added support for 6 and 8MB SA-1 ROMs.
+- BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
 
 ___Deprecated features___
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.

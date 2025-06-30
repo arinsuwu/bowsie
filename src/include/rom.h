@@ -1,7 +1,6 @@
 #pragma once
 
 import std;
-import rapidjson;
 import asar;
 
 using namespace std;
@@ -32,9 +31,12 @@ struct Rom
     /*
         read<int bytes>(int addr) -> uint: Read bytes from ROM
         ---
-        Input:  addr is the SNES address to read
-                bytes is the amount of bytes to read
-        Output: res contains the bytes read (unsigned -1 in failure)
+        Input:
+        * addr is the SNES address to read
+        * bytes is the amount of bytes to read
+
+        Output:
+        * res contains the bytes read (unsigned -1 in failure)
     */
     template<int bytes> unsigned int read(int addr)
     {

@@ -5,7 +5,9 @@
 
 module;
 
+#include "aux.h"
 #include "rom.h"
+#include "settings.h"
 
 export module meowmeow;
 
@@ -34,8 +36,11 @@ namespace meOWmeOW
         /*
             init_meowmeow(Rom& rom) -> bool: initialize meOWmeOW
             ---  
-            Input:  rom is a reference to a Rom object  
-            Output: true if the ROM data could be read successfully, false otherwise
+            Input:
+            * rom is a reference to a Rom object
+
+            Output:
+            * true if the ROM data could be read successfully, false otherwise
         */
         bool init_meowmeow(Rom& rom)
         {
@@ -67,10 +72,13 @@ namespace meOWmeOW
         /*
             execute_meowmeow(Rom& rom, string tool_folder, vector<uint8_t>& new_sprite_data) -> run meOWmeOW on ROM
             ---  
-            Input:  rom is a reference to a Rom object  
-                    tool_folder is the path to BOWSIE  
-                    new_sprite_data is a reference to a vector of 1-byte integers where to push the corrected data
-            Output: true if the ROM data could be fixed (or meOWmeOW didn't need to run), false otherwise
+            Input:
+            * rom is a reference to a Rom object
+            * tool_folder is the path to BOWSIE
+            * new_sprite_data is a reference to a vector of 1-byte integers where to push the corrected data
+
+            Output:
+            * true if the ROM data could be fixed (or meOWmeOW didn't need to run), false otherwise
         */
         bool execute_meowmeow(Rom& rom, string tool_folder, vector<uint8_t>& new_sprite_data)
         {
