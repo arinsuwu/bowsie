@@ -21,7 +21,7 @@
  * meOWmeOW is (c) 2025 Erik, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
 */
 
-#include "include/aux.h"
+#include "include/misc.h"
 #include "include/map16.h"
 #include "include/rom.h"
 #include "include/settings.h"
@@ -637,7 +637,7 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
     exit(0);
 }
 
-// cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" /reference "meowmeow=src/meowmeow.ifc" src/bowsie.cpp src/include/aux.cpp src/include/map16.cpp src/include/rom.cpp src/include/settings.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res
+// cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" /reference "meowmeow=src/meowmeow.ifc" src/bowsie.cpp src/include/misc.cpp src/include/map16.cpp src/include/rom.cpp src/include/settings.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res
 // rc /nologo bowsie.rc
 
 // for_each(rom_path.begin()+rom_path.size()-3,rom_path.end(),[](char &c){c = toupper(c);});

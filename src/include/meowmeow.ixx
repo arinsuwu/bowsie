@@ -5,7 +5,7 @@
 
 module;
 
-#include "aux.h"
+#include "misc.h"
 #include "rom.h"
 #include "settings.h"
 
