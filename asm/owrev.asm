@@ -106,8 +106,6 @@ endif
     STZ !ow_sprite_speed_z_acc,x    ; |
     STZ !ow_sprite_init,x           ;/
 
-    wdm
-
     INY #3                          ;   move to the extra bytes
     PHX
     LDX $05

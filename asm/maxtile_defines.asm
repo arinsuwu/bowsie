@@ -52,10 +52,10 @@ elseif !bowsie_owrev
     !maxtile_mirror_pri_2          #= !maxtile_mirror_pri_1+$10
     !maxtile_mirror_pri_3          #= !maxtile_mirror_pri_2+$10
 
-    !maxtile_oam_buffer            #= $7F0000
-    !maxtile_tilesize_buffer       #= $7F0000
+    !maxtile_oam_buffer            #= $7F9A7B
+    !maxtile_tilesize_buffer       #= $7F9A7B
 
-    !maxtile_tilesize_buffer_pri_0 #= $7F0000
+    !maxtile_tilesize_buffer_pri_0 #= $7F9A7B
     !maxtile_tilesize_buffer_pri_1 #= !maxtile_tilesize_buffer_pri_0+$80
     !maxtile_tilesize_buffer_pri_2 #= !maxtile_tilesize_buffer_pri_1+$80
     !maxtile_tilesize_buffer_pri_3 #= !maxtile_tilesize_buffer_pri_2+$80
