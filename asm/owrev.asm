@@ -106,6 +106,8 @@ endif
     STZ !ow_sprite_speed_z_acc,x    ; |
     STZ !ow_sprite_init,x           ;/
 
+    wdm
+
     INY #3                          ;   move to the extra bytes
     PHX
     LDX $05
@@ -116,7 +118,7 @@ endif
     LDA.l extra_byte_table,x        ;\
     AND #$00FF                      ; | if there's no extra bytes (so only three bytes),
     SBC #$0002                      ; | move on
-    BEQ .next_sprite                ;/
+    BEQ .no_extra                   ;/
     CMP #$0005                      ;\  if there's more than 4 extra bytes,
     BCS .extra_byte_ptr             ;/  put a pointer instead
 
@@ -143,6 +145,13 @@ endif
     STA !ow_sprite_extra_1,x    ; | store retrieved extra bytes in the extra byte tables
     LDA $0C                     ; |
     STA !ow_sprite_extra_2,x    ;/
+    BRA .next_sprite
+
+.no_extra
+    if not(!sa1)
+        SEP #$10
+    endif
+    PLX
 
 .next_sprite
     SEP #$20
