@@ -356,7 +356,7 @@ spawn_overworld_sprite:
     STZ !ow_sprite_misc_5,x
 	SEP.b #$20
 	LDA.b #$FF
-	STA.w !ow_sprite_index,x
+	STA.w !ow_sprite_load_index,x
 
     PLP
     PLY
