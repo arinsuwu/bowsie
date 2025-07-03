@@ -13,7 +13,7 @@ ___Extra bytes and meOWmeOW___
   - You're limited to eight extra bytes.
 - Added *meOWmeOW*, which will detect changes in extra bytes, similar to Akaginite's *MeiMei*.
   - Added the `meowmeow` setting, which allows you to enable or disable *meOWmeOW* if so desired.
-  - *meOWmeOW* is disabled with OW Revolution. Sorry! Run PIXI after BOWSIE to fix any potential extra byte changes via *MeiMei*.
+  - *meOWmeOW* also works with OW Revolution. Remember that it expects sprites with extra bit set to 1 and sprite numbers `01-7F`.
 
 ___MaxTile___
 - Added suport for SA-1 *MaxTile*.

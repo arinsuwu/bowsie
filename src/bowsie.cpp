@@ -198,15 +198,14 @@ int main(int argc, char *argv[])
     if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
     {
         if(verbose)
-            println("Overworld Revolution detected.\n  meOwmeOW has been disabled.\n  MaxTile has been enabled.");
+            println("Overworld Revolution detected.\n  MaxTile has been enabled.");
 
         ow_rev = true;
         method = "owrev";
+        slots = slots == -1 ? 32 : slots;
 
         // Settings hardcoded to OR
-        run_meowmeow = false;
         use_maxtile = true;
-        slots = slots == -1 ? 32 : slots;
     }
     else
     {
@@ -450,7 +449,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
         rom.new_extra_bytes[i] = 0x03;
     }
 
-    meowmeow meowmeow;
+    meowmeow meowmeow { ow_rev };
     if(run_meowmeow)
         if(!meowmeow.init_meowmeow(rom))
             exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
