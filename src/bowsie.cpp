@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
             if(rom.read<1>(OWREV_HANDLER_PTR)==0x20)
                 {
                     clean_patch.append(format("\norg $04{:0>4X}\n    padbyte $00 : pad ${:0>6X}",
-                                              rom.read<1>(OWREV_LOAD_HACK_PTR+1)|((rom.read<1>(OWREV_LOAD_HACK_PTR+2)<<8)&0xFF00), BOWSIE_USED_PTR));
+                                              rom.read<2>(OWREV_LOAD_HACK_PTR+1, true), BOWSIE_USED_PTR));
                 }
         if(!rom.inline_patch(tool_folder, clean_patch.c_str()))
             exit(error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));

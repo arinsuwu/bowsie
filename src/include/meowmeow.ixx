@@ -46,9 +46,7 @@ namespace meOWmeOW
         {
             // Verify if there is an extra byte table already in ROM.
             rom.old_extra_bytes = new char[0x80] { 0x03 };
-            const int extra_byte_loc = snestopc_pick( (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR)&0xFF) | \
-                                                      (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+1)&0xFF)<<8 | \
-                                                      (rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+2)&0xFF)<<16 )+HEADER_SIZE;
+            const int extra_byte_loc = snestopc_pick(rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE;
             if(rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+3) == 0x42)
             {
                 // Extra byte table exists, acquire it from the ROM.
@@ -97,25 +95,16 @@ namespace meOWmeOW
             {
                 println("Extra byte changes detected. Running meOWmeOW to align data.");
 
-                const int ow_sprite_data = (rom.read<1>(OW_SPRITE_DATA_PTR)&0xFF) | \
-                                           (rom.read<1>(OW_SPRITE_DATA_PTR+1)&0xFF)<<8 | \
-                                           (rom.read<1>(OW_SPRITE_DATA_PTR+2)&0xFF)<<16;
+                const int ow_sprite_data = rom.read<3>(OW_SPRITE_DATA_PTR, true);
                 int submaps_processed = 0;
                 int bytes_processed = 0;
-                int submap_offset[SUBMAPS] = { (rom.read<1>(ow_sprite_data)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+1)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+2)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+3)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+4)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+5)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+6)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+7)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+8)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+9)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+10)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+11)&0xFF)<<8,
-                                               (rom.read<1>(ow_sprite_data+12)&0xFF) | \
-                                               (rom.read<1>(ow_sprite_data+13)&0xFF)<<8 };
+                int submap_offset[SUBMAPS] = { static_cast<int>(rom.read<2>(ow_sprite_data, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+2, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+4, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+6, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+8, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+10, true)),
+                                               static_cast<int>(rom.read<2>(ow_sprite_data+12, true)) };
 
 
                 // Prepare ROM data by putting the needle in the first map's data.

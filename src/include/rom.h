@@ -29,7 +29,7 @@ struct Rom
     bool inline_patch(string, const char *);
 
     /*
-        read<int bytes>(int addr) -> uint: Read bytes from ROM
+        read<int bytes>(int addr, bool little_endian = false) -> uint: Read bytes from ROM
         ---
         Input:
         * addr is the SNES address to read
@@ -38,14 +38,24 @@ struct Rom
         Output:
         * res contains the bytes read (unsigned -1 in failure)
     */
-    template<int bytes> unsigned int read(int addr)
+    template<int bytes> unsigned int read(int addr, bool little_endian)
     {
         unsigned int res = 0x0;
+        int shift;
+
         rom_data.clear();
         rom_data.seekg(snestopc_pick(addr)+HEADER_SIZE);
         for(int i=0;i<bytes;++i)
-            res|=(rom_data.get()&0xFF)<<((bytes-i-1)*8);
+        {
+            shift = little_endian ? i*8 : (bytes-1-i)*8;
+            res|=(rom_data.get()&0xFF)<<shift;
+        }
         return res;
+    }
+
+    template<int bytes> unsigned int read(int addr)
+    {
+        return read<bytes>(addr, false);
     }
 };
 
