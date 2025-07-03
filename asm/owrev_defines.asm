@@ -59,7 +59,7 @@ endmacro
 %define_ow_sprite_table(ow_sprite_speed_z_acc, 1830)
 %define_ow_sprite_table(ow_sprite_init, 1870)
 %define_ow_sprite_table(ow_sprite_extra_1, 1770)
-%define_ow_sprite_table(ow_sprite_extra_2, 18B0)
+%define_ow_sprite_table(ow_sprite_extra_2, 0110)
 
 ;   OW Revolution needs these
 %define_ow_sprite_table(ow_sprite_props, 1E02)
@@ -76,9 +76,7 @@ else
 endif
 
 ;   Flags
-%define_ow_sprite_table(ow_sprite_index, 1E82)
-%define_ow_sprite_table(ow_sprite_oam, 1E84)
-%define_ow_sprite_table(ow_sprite_oam_p, 1E86)
+%define_ow_sprite_table(ow_sprite_index, 0DDE)
 
 !ow_sprite_extra_bits  #= !ow_sprite_extra_1            ;   this is kept for backwards compatibility
 
