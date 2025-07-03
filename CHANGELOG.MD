@@ -30,8 +30,9 @@ ___MaxTile___
 
 ___Shared subroutine improvements___
 - Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
-- `%sub_horz_pos()` and `%sub_vert_pos()` now store the distance between player and sprite in scratch RAM `$0E`.
 - Added `%erase_sprite()`. In it's simplest form, it just sets a sprite number to zero, but when using OW Revolution, it also marks the sprite to be reloaded correctly.
+- `%sub_horz_pos()` and `%sub_vert_pos()` now store the distance between player and sprite in scratch RAM `$0E`.
+- `%sub_offscreen()` now has more tolerance in how far off screen a sprite can be before despawning. This is more noticeable for big OW Revolution maps.
 
 ___Macros___
 - Added three helper macros for hybrid *MaxTile* and regular graphics routines: `%maxtile_set_databank()`, which preserves and sets the data bank to the bank of the OAM buffer; `%maxtile_clear_databank()`, which restores the data bank, and `%maxtile_get_tilesize_index()`, which loads the index for the high table in Y. The former two do nothing when MaxTile is disabled. The latter uses the internal pointer to the tilesize table when MaxTile is enabled, and a traditional right shift by two when disabled.

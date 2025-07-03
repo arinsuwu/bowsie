@@ -6,8 +6,8 @@
 ;    $00-$03 are destroyed
 ;===============================================
 
-!offs_threshold_x = $0000
-!offs_threshold_y = $0000
+!offs_threshold_x = $0060
+!offs_threshold_y = $0060
 
     if !bowsie_owrev
         LDA !ow_sprite_props,x
@@ -25,7 +25,7 @@
         ADC #!offs_threshold_x
     endif
     if !bowsie_widescreen_ow    ;   widescreen overworld check
-        CMP.w #$FFF0+(!offs_threshold_x*2)
+        CMP.w #$FFF0-(!offs_threshold_x*2)
         BCS +
     endif
     CMP.w #$0100+(!offs_threshold_x*2)
