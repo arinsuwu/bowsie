@@ -532,12 +532,12 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 SEP #$20
 
             .check_draw_player_2
-                LDA $1F11|!addr
+                LDA !mario_map
                 LDY $13D9|!addr
                 CPY #$0A
                 BNE +
                 EOR #$01
-            +   CMP $1F12|!addr
+            +   CMP !luigi_map
                 BNE .draw_player_1
 
                 LDA $0DD6|!addr
@@ -554,7 +554,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 STA $07
                 STA $8B
 
-                LDA $1F13|!addr,y
+                LDA !mario_anim_state,y
                 CMP #$12
                 BEQ ..dont_offset_pos
                 CMP #$07
@@ -602,7 +602,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 STA $07
                 STA $8B
 
-                LDA $1F13|!addr,y
+                LDA !mario_anim_state,y
                 CMP #$12
                 BEQ ..dont_offset_pos
                 CMP #$07
@@ -639,7 +639,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 JMP.w .maxtile
 
             .do_draw
-                LDA $1F13|!addr,y
+                LDA !mario_anim_state,y
                 ASL #4
                 STA $00
                 LDA $13
@@ -711,7 +711,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 JMP.w .maxtile
             ; We need to save bytes by any means necessary
             .do_draw
-                LDA $1F13|!addr,y
+                LDA !mario_anim_state,y
                 ASL #4
                 STA $00
                 LDA $13

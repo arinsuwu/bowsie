@@ -12,7 +12,7 @@
     ADC #$0008
     LDY $0DD6|!addr         ;   Mario: 00   Luigi: 04
     SEC
-    SBC $1F17|!addr,y       ;   Mario/Luigi x position
+    SBC !mario_x_pos_lo,y       ;   Mario/Luigi x position
     STA $00
     BPL +
     EOR #$FFFF              ;   if distance is minus, do bit reverse
@@ -23,7 +23,7 @@
     ADC #$0008
     LDY $0DD6|!addr         ;   Mario: 00  Luigi: 04
     SEC
-    SBC $1F19|!addr,y       ;   Mario/Luigi y position
+    SBC !mario_y_pos_lo,y       ;   Mario/Luigi y position
     STA $02
     BPL +
     EOR #$FFFF              ;   if distance is minus, do bit reverse

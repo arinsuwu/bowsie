@@ -91,7 +91,7 @@ custom_ow_sprite_load_main:
 .main
     PHB
     LDX $0DB3|!addr             ;\
-    LDA $1F11|!addr,x           ; | submap of current player (times 2) into X for index to offset table.
+    LDA !mario_map,x           ; | submap of current player (times 2) into X for index to offset table.
     ASL                         ; |
     TAY                         ;/
     LDA.l $0EF55D+2             ;\  return if pointer is empty
@@ -280,7 +280,7 @@ custom_ow_sprite_load:
     JSR custom_ow_sprite_load_main
     JSR run_ow_sprite_transition
     PLX
-    LDA $1F11|!addr,x
+    LDA !mario_map,x
     JMP $DBA6
 
 ;---

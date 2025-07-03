@@ -42,6 +42,22 @@ else
     !adjacent_oam_slot          = -$01
 endif
 
+;   Expanded levels and events definitions...
+;   ...except there's no such thing in the traditional OW, for now.
+!level_status_flags    #= $1EA2|!addr
+!event_flags           #= $1F02|!addr
+!mario_map             #= $1F11|!addr
+!luigi_map             #= !mario_map+1
+!mario_anim_state      #= $1F13|!addr
+!luigi_anim_state      #= $1F15|!addr
+!mario_x_pos_lo        #= $1F17|!addr
+!mario_y_pos_lo        #= !mario_x_pos_lo+2
+!luigi_x_pos_lo        #= !mario_x_pos_lo+4
+!luigi_y_pos_lo        #= !mario_x_pos_lo+6
+!events_triggered      #= $1F2E|!addr
+
+!save_file_size        #= !events_triggered-!level_status_flags+4
+
 ;   Structs
 struct oam_buffer !oam_buffer
     .x_pos: skip 1

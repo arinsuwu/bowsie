@@ -5,7 +5,7 @@
 ;====================================
 
     LDY $0DD6|!addr
-    LDA $1F17|!addr,y
+    LDA !mario_x_pos_lo,y
     SEC
     SBC #$0008
     AND #$FFFE
@@ -16,7 +16,7 @@
     SBC !ow_sprite_z_pos,x
     AND #$FFFE
     STA $00
-    LDA $1F19|!addr,y
+    LDA !mario_y_pos_lo,y
     SEC
     SBC #$000C
     AND #$FFFE

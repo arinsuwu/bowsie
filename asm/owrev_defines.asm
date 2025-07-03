@@ -19,6 +19,38 @@ if !bowsie_maxtile
     !adjacent_oam_slot          = $01
 endif
 
+;   Expanded levels and events definitions
+if read1($0480D2)&$10 == $10
+    !level_status_flags    #= $1EA2|!addr
+    !event_flags           #= $1FA2|!addr
+    !mario_map             #= $1FC2|!addr
+    !luigi_map             #= !mario_map+2
+    !mario_anim_state      #= $1FC6|!addr
+    !luigi_anim_state      #= $1FC8|!addr
+    !mario_x_pos_lo        #= $1FCA|!addr
+    !luigi_x_pos_lo        #= !mario_x_pos_lo+2
+    !mario_y_pos_lo        #= !mario_x_pos_lo+4
+    !luigi_y_pos_lo        #= !mario_x_pos_lo+6
+    !music_override        #= $1FD2|!addr
+    !saved_game_flags      #= $1FD3|!addr
+    !events_triggered      #= $1FD4|!addr
+else
+    !level_status_flags    #= $1EA2|!addr
+    !event_flags           #= $1F02|!addr
+    !mario_map             #= $1F11|!addr
+    !luigi_map             #= !mario_map+2
+    !mario_anim_state      #= $1F15|!addr
+    !luigi_anim_state      #= $1F17|!addr
+    !mario_x_pos_lo        #= $1F19|!addr
+    !luigi_x_pos_lo        #= !mario_x_pos_lo+2
+    !mario_y_pos_lo        #= !mario_x_pos_lo+4
+    !luigi_y_pos_lo        #= !mario_x_pos_lo+6
+    !music_override        #= $1F21|!addr
+    !saved_game_flags      #= $1F22|!addr
+    !events_triggered      #= $1F2D|!addr
+endif
+    !save_file_size        #= !events_triggered-!level_status_flags+4
+
 ;   Structs
 struct oam_buffer !oam_buffer
     .x_pos: skip 1
