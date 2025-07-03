@@ -23,10 +23,8 @@ org $0480F2
 
     skip 4
     ;   four bytes reserved for custom spawn sprite routine in OW Revolution
-    spawn_sprite_jml:               ;   This. is. Ugly.
-        %spawn_sprite() ;   JSL spawn_sprite
-        skip -4         ;   backtrack to the JSL
-        db $5C          ;   opcode for JML
+    JSR.w spawn_overworld_sprite    ;   the equivalent of OWRev's SpawnOverworldSprite
+    RTL
 
 ;---
 
@@ -305,6 +303,66 @@ execute_ow_sprite_init:
     PHK                             ;\
     PEA.w return-1                  ;/ workaround for JSL [$0000]
     JML.w [!dp]
+
+;---
+
+spawn_overworld_sprite:
+    PHX
+    PHY
+    PHP
+    REP #$30
+
+    LDX.b #(!bowsie_ow_slots-1)*2
+.loop
+    LDA !ow_sprite_num,x
+    BEQ .spawn
+    DEX #2
+    BPL .loop
+
+    PLP
+    PLY
+    PLX
+    CLC
+    RTS
+
+.spawn
+    LDA $0001,y
+    STA !ow_sprite_num,x
+    LDA $0003,y
+    STA !ow_sprite_x_pos,x
+    LDA $0005,y
+    STA !ow_sprite_y_pos,x
+    LDA $0007,y
+    STA !ow_sprite_z_pos,x
+    LDA $0009,y
+    STA !ow_sprite_extra_1,x
+    LDA $000B,y
+    STA !ow_sprite_extra_2,x
+
+    STZ !ow_sprite_init,x
+    STZ !ow_sprite_speed_x,x
+    STZ !ow_sprite_speed_x_acc,x
+    STZ !ow_sprite_speed_y,x
+    STZ !ow_sprite_speed_y_acc,x
+    STZ !ow_sprite_speed_z,x
+    STZ !ow_sprite_speed_z_acc,x
+    STZ !ow_sprite_timer_1,x
+    STZ !ow_sprite_timer_2,x
+    STZ !ow_sprite_timer_3,x
+    STZ !ow_sprite_misc_1,x
+    STZ !ow_sprite_misc_2,x
+    STZ !ow_sprite_misc_3,x
+    STZ !ow_sprite_misc_4,x
+    STZ !ow_sprite_misc_5,x
+	SEP.b #$20
+	LDA.b #$FF
+	STA.w !ow_sprite_index,x
+
+    PLP
+    PLY
+    PLX
+    SEC
+    RTS
 
 ;---
 
