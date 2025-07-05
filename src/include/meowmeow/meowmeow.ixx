@@ -5,9 +5,9 @@
 
 module;
 
-#include "misc.h"
-#include "rom.h"
-#include "settings.h"
+#include "../misc.h"
+#include "../rom.h"
+#include "../settings.h"
 
 export module meowmeow;
 

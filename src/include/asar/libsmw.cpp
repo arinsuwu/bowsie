@@ -4,7 +4,6 @@
 #include "errors.h"
 #include "asar.h"
 #include "crc32.h"
-#include <cstdint>
 
 mapper_t mapper=lorom;
 int sa1banks[8]={0<<20, 1<<20, -1, -1, 2<<20, 3<<20, -1, -1};

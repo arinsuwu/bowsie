@@ -1,21 +1,5 @@
 // RPG Hacker: We can't include that here, because it leads to crazy
 // errors in windows.h - probably related to our string class?!?
-//#include "platform/file-helpers.h"
-
-#if defined(_MSC_VER)
-#    pragma warning(push)
-#    pragma warning(disable : 4668)
-#    pragma warning(disable : 4987)
-#endif
-
-#include <windows.h>
-#include <ctype.h>
-
-#if defined(_MSC_VER)
-#    pragma warning(pop)
-#endif
-
-#include <ctype.h>
 
 #include "../file-helpers.h"
 

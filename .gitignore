@@ -1,4 +1,5 @@
 .vscode/
+build/
 ExGraphics/
 Graphics/
 misc_patches/

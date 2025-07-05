@@ -9,7 +9,6 @@
 #include "asar_math.h"
 #include "macro.h"
 #include "platform/file-helpers.h"
-#include <cinttypes>
 
 #include "interface-shared.h"
 #include "arch-shared.h"

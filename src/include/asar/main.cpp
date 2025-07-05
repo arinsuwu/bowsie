@@ -13,7 +13,6 @@
 #include "assembleblock.h"
 #include "asar_math.h"
 #include "macro.h"
-#include <cstdint>
 
 // randomdude999: remember to also update the .rc files (in res/windows/) when changing this.
 // Couldn't find a way to automate this without shoving the version somewhere in the CMake files

@@ -1,7 +1,6 @@
 #include "settings.h"
 
 using namespace std;
-using namespace rapidjson;
 
 /*
     deserialize_json(Document* json, string* err_str) -> bool: Parse settings

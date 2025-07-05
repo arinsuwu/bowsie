@@ -1,7 +1,6 @@
 #include "rom.h"
 
 using namespace std;
-using namespace asar;
 
 // I/O functions
 

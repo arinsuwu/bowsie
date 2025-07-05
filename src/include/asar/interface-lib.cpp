@@ -13,7 +13,6 @@
 #include "dll_helper.h"
 #endif
 
-#include <cstdint>
 #if defined(CPPCLI)
 #define EXPORT extern "C"
 #elif defined(_WIN32)

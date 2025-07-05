@@ -3,7 +3,6 @@
 */
 
 #include "crc32.h"
-#include <cstdint>
 
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the

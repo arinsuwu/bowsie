@@ -1,7 +1,23 @@
 module;
 
-#include <Windows.h>
+#include <algorithm>
+#include <cinttypes>
+#include <cstdint>
+#include <cstdio>
+#include <functional>
+#include <new>
+
+#include <assert.h>
 #include <ctype.h>
+#include <errno.h>
+#include <math.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <Windows.h>
 
 export module asar;
 
@@ -12,48 +28,48 @@ export module asar;
 #define strcasecmp _stricmp
 #define ASAR_STATIC 1
 
-#include "asar/asar.h"
+#include "asar.h"
+#include "interface-shared.h"
 
-#include "asar/addr2line.h"
-#include "asar/arch-shared.h"
-#include "asar/asar_math.h"
-#include "asar/assembleblock.h"
-#include "asar/assocarr.h"
-#include "asar/autoarray.h"
-#include "asar/crc32.h"
-#include "asar/errors.h"
-#include "asar/interface-shared.h"
-#include "asar/libcon.h"
-#include "asar/libmisc.h"   // no joke msvc was crying because the inline function was called min
-#include "asar/libsmw.h"
-#include "asar/libstr.h"
-#include "asar/macro.h"
-#include "asar/std-includes.h"
-#include "asar/virtualfile.h"
-#include "asar/warnings.h"
+#include "addr2line.h"
+#include "arch-shared.h"
+#include "asar_math.h"
+#include "assembleblock.h"
+#include "assocarr.h"
+#include "autoarray.h"
+#include "crc32.h"
+#include "errors.h"
+#include "libcon.h"
+#include "libmisc.h"   // no joke msvc was crying because the inline function was called min
+#include "libsmw.h"
+#include "libstr.h"
+#include "macro.h"
+#include "std-includes.h"
+#include "virtualfile.h"
+#include "warnings.h"
 
-#include "asar/platform/file-helpers.h"
+#include "platform/file-helpers.h"
 
-#include "asar/main.cpp"
-#include "asar/addr2line.cpp"
-#include "asar/arch-65816.cpp"
-#include "asar/arch-spc700.cpp"
-#include "asar/arch-superfx.cpp"
-#include "asar/asar_math.cpp"
-#include "asar/assembleblock.cpp"
-#include "asar/crc32.cpp"
-#include "asar/errors.cpp"
-#include "asar/libcon.cpp"
-#include "asar/libsmw.cpp"
-#include "asar/libstr.cpp"
-#include "asar/macro.cpp"
-#include "asar/virtualfile.cpp"
-#include "asar/warnings.cpp"
+#include "main.cpp"
+#include "addr2line.cpp"
+#include "arch-65816.cpp"
+#include "arch-spc700.cpp"
+#include "arch-superfx.cpp"
+#include "asar_math.cpp"
+#include "assembleblock.cpp"
+#include "crc32.cpp"
+#include "errors.cpp"
+#include "libcon.cpp"
+#include "libsmw.cpp"
+#include "libstr.cpp"
+#include "macro.cpp"
+#include "virtualfile.cpp"
+#include "warnings.cpp"
 
-#include "asar/platform/file-helpers.h"
+#include "platform/file-helpers.h"
 
-#include "asar/platform/file-helpers.cpp"
-#include "asar/platform/windows/file-helpers-win32.cpp"
+#include "platform/file-helpers.cpp"
+#include "platform/windows/file-helpers-win32.cpp"
 
 static autoarray<const char *> prints;
 static string symbolsfile;

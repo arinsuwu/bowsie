@@ -27,8 +27,8 @@
 #include "include/settings.h"
 
 import std;
-import rapidjson;
 import asar;
+import rapidjson;
 import meowmeow;
 
 #define VERSION 1
@@ -285,7 +285,8 @@ int main(int argc, char *argv[])
     {
         if(verbose)
             println("Performing clean-up of a previous execution...");
-        destroy_map16(rom_name);
+        if(!destroy_map16(rom_name))
+            exit(error("Error cleaning up temporary files. Exiting..."));
 
         string clean_patch;
         int clean_offset = 4;

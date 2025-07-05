@@ -13,14 +13,6 @@
 #    pragma warning(disable : 4987)
 #endif
 
-#include <new>//placement new
-#include <stdlib.h>//malloc, realloc, free
-#include <string.h>//strcmp, memmove
-#include <stdio.h>
-#include <ctype.h>
-#include <math.h>
-#include <cstdio>
-
 inline char * duplicate_string(const char * str)
 {
     char * a = (char*)malloc(sizeof(char)*(strlen(str) + 1));

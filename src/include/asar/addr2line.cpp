@@ -2,7 +2,6 @@
 #include "asar.h"
 #include "crc32.h"
 #include "libstr.h"
-#include <cstdint>
 
 //////////////////////////////////////////////////////////////////////////
 // Class to store address-to-line mappings for richer symbolic information

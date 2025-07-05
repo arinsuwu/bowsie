@@ -1,8 +1,6 @@
 #include "warnings.h"
 
 #include "asar.h"
-#include <assert.h>
-#include <stdarg.h>
 
 #include "interface-shared.h"
 

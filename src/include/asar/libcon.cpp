@@ -1,6 +1,5 @@
 #include "std-includes.h"
 #include "libcon.h"
-#include <signal.h>
 
 static char * progname;
 static char ** args;

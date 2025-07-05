@@ -11,9 +11,6 @@
 #include "macro.h"
 #include "asar_math.h"
 #include "warnings.h"
-#include <math.h>
-#include <functional>
-#include <algorithm>
 
 bool math_pri=true;
 bool math_round=false;

@@ -1,4 +1,3 @@
-#include <errno.h>
 #include "virtualfile.h"
 #include "platform/file-helpers.h"
 #include "warnings.h"
