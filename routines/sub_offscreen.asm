@@ -12,11 +12,23 @@
     if !bowsie_owrev
         LDA !ow_sprite_props,x
         LSR
-        BCC +
+        BCC .do_off_screen_checks
+
+        LDA !ow_sprite_x_pos,x
+        SBC $1A
+        STA $00
+        LDA !ow_sprite_y_pos,x
+        SEC
+        SBC !ow_sprite_z_pos,x
+        SEC
+        SBC $1C
+        STA $02
         CLC
         RTL
     endif
-+   LDA !ow_sprite_x_pos,x
+
+.do_off_screen_checks
+    LDA !ow_sprite_x_pos,x
     SEC
     SBC $1A
     STA $00
