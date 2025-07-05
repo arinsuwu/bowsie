@@ -48,5 +48,5 @@ struct Map16
     bool write_tooltip(int, string*);
 };
 
-void destroy_map16(string filename);
+bool destroy_map16(string filename);
 

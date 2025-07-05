@@ -50,8 +50,14 @@ bool Map16::deserialize_json(Document* json, string* err_str)
     }
     else
         this->no_tiles = (*json)["no_tiles"].GetInt();
+        
+    if(no_tiles < 0)
+    {
+        (*err_str) = status ? "no_tiles must not be negative." : (*err_str).erase((*err_str).size()-2, 2).append("\nno_tiles must not be negative.");
+    }
+    
     (*err_str) = status ? "Couldn't find tile(s):\t\t\t\t" : (*err_str).erase((*err_str).size()-2, 2).append("\nCouldn't find key(s):\t\t\t\t");
-
+    
     for(int i=1;i<=no_tiles;++i)
     {
         string c = format("tile_{}", i);
@@ -328,25 +334,27 @@ bool Map16::write_tooltip(int sprite_number, string* err_string)
 {
     string str = format("{:X}\t10\t{}\n", sprite_number, tooltip);
     sscov.write(str.c_str(), str.size());
-    int * map16_numbers = write_map16_tiles(err_string);
-    str = format("{:X}\t12\t", sprite_number);
-    for(int i=0;i<no_tiles;)
+    if(no_tiles)
     {
-        if(map16_numbers[i]==-1)
-            return false;
-        str.append(format("{},{},{:X}\t", x_offset[i], y_offset[i], map16_numbers[i]));
-        x_offset.pop_back();
-        y_offset.pop_back();
-        if(!is_16x16[i])
-            i+=4;
-        else
-            ++i;
-    }
-    if(no_tiles!=0)
+        int * map16_numbers = write_map16_tiles(err_string);
+        str = format("{:X}\t12\t", sprite_number);
+        for(int i=0;i<no_tiles;)
+        {
+            if(map16_numbers[i]==-1)
+                return false;
+            str.append(format("{},{},{:X}\t", x_offset[i], y_offset[i], map16_numbers[i]));
+            x_offset.pop_back();
+            y_offset.pop_back();
+            if(!is_16x16[i])
+                i+=4;
+            else
+                ++i;
+        }
         sscov.write((str+"\n").c_str(), str.size()+1);
-    is_16x16.assign({});
-    x_offset.assign({});
-    y_offset.assign({});
+        is_16x16.assign({});
+        x_offset.assign({});
+        y_offset.assign({});
+    }
     return true;
 }
 
@@ -359,10 +367,20 @@ bool Map16::write_tooltip(int sprite_number, string* err_string)
     Output:
     * sprite map16 files erased from disk (if they existed)
 */
-void destroy_map16(string filename)
+bool destroy_map16(string filename)
 {
-    if(filesystem::exists(filename+".s16ov"))
-        filesystem::remove(filename+".s16ov");
-    if(filesystem::exists(filename+".sscov"))
-        filesystem::remove(filename+".sscov");
+    try
+    {
+        if(filesystem::exists(filename+".s16ov"))
+            filesystem::remove(filename+".s16ov");
+        if(filesystem::exists(filename+".sscov"))
+            filesystem::remove(filename+".sscov");
+
+        return true;
+    }
+    catch(filesystem::filesystem_error const & err)
+    {
+        println("There was an error deleting the existing Map16 files. Details: {}", err.code().message());
+        return false;
+    }
 }
