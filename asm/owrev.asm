@@ -312,7 +312,7 @@ spawn_overworld_sprite:
     PHP
     REP #$30
 
-    LDX.b #(!bowsie_ow_slots-1)*2
+    LDX.w #(!bowsie_ow_slots-1)*2
 .loop
     LDA !ow_sprite_num,x
     BEQ .spawn
