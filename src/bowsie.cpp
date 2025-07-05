@@ -220,11 +220,15 @@ int main(int argc, char *argv[])
     if(slots<=0)
         exit(error("Can't have zero or less slots. It makes no sense."));
     if(!ow_rev)
+    {
         if(slots>24 && !bypass_ram_check)
             exit(error("Can't have more than 24 slots due to memory limitations."));
+    }
     else
+    {
         if(slots>32 && !bypass_ram_check)
             exit(error("Can't have more than 32 slots due to memory limitations."));
+    }
     if( bypass_ram_check && method!="custom" && slots>255 )
         exit(error("Can't have more than 255 slots without a custom insertion handler."));
     if(method!="vldc9" && method!="owrev" && method!="custom")
@@ -286,7 +290,7 @@ int main(int argc, char *argv[])
         if(verbose)
             println("Performing clean-up of a previous execution...");
         if(!destroy_map16(rom_name))
-            exit(error("Error cleaning up temporary files. Exiting..."));
+            exit(error("Error cleaning up existing Map16 files. Exiting..."));
 
         string clean_patch;
         int clean_offset = 4;
@@ -294,7 +298,7 @@ int main(int argc, char *argv[])
         {
             if(rom.read<3>(BOWSIE_USED_PTR+clean_offset)==0x555555)
             {
-                clean_patch.append(format("org ${:0>6X}\n    dl $FFFFFF", BOWSIE_USED_PTR+clean_offset));
+                clean_patch.append(format("org ${:0>6X}\n    dl $FFFFFF\norg ${:0>6X}\n    dd $FFFFFFFF", BOWSIE_USED_PTR+clean_offset, BOWSIE_USED_PTR));
                 break;
             }
             clean_patch.append(format("autoclean read3(${0:0>6X})\norg ${0:0>6X}\n    dl $FFFFFF\n", BOWSIE_USED_PTR+clean_offset));
@@ -315,10 +319,7 @@ int main(int argc, char *argv[])
 
     }
     else
-    {
-        println("First time using BOWSIE! Thank you. :)\n");
         rom.inline_patch(tool_folder, format("org ${:0>6X} : dd ${:0>8X}", BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE).c_str());
-    }
 
     // BOWSIE-specific defines
     string defines(format("\
