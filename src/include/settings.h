@@ -5,9 +5,6 @@
 import std;
 import rapidjson;
 
-using namespace std;
-using namespace rapidjson;
-
 // CLI settings
 static const char * cli_keys[] = {"--verbose", "--generate_map16", "--meowmeow",
                                   "--slots", "--use_maxtile",
@@ -27,6 +24,6 @@ static const char * bool_keys[] = {"verbose", "generate_map16", "meowmeow", "use
     Check the readme for more info
 */
 
-bool deserialize_json(Document*, map<string, variant<bool, int, string>>&, string*);
-void parse_cli_settings(vector<string>&, map<string, variant<bool, int, string>>&);
+bool deserialize_json(rapidjson::Document*, std::map<std::string, std::variant<bool, int, std::string>>&, std::string*);
+void parse_cli_settings(std::vector<std::string>&, std::map<std::string, std::variant<bool, int, std::string>>&);
 

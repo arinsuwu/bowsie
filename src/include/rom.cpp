@@ -1,6 +1,8 @@
 #include "rom.h"
 
-using namespace std;
+using ios = std::ios;
+
+namespace fs = std::filesystem;
 
 // I/O functions
 
@@ -14,7 +16,7 @@ using namespace std;
 */
 bool Rom::open_rom()
 {
-    rom_data = ifstream(rom_path, ios::binary | ios::ate);
+    rom_data = std::ifstream(rom_path, ios::binary | ios::ate);
     rom_size = rom_data.tellg();
     raw_rom_data = new char[MAX_SIZE] { 0x00 };
     first_time = true;
@@ -23,7 +25,7 @@ bool Rom::open_rom()
 
 bool Rom::reload()
 {
-    ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
+    std::ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
     return open_rom();
 }
 
@@ -39,7 +41,7 @@ bool Rom::reload()
 */
 void Rom::done(bool meowmeow)
 {
-    ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
+    std::ofstream(rom_path, ios::binary).write(raw_rom_data, rom_size);
     delete[] raw_rom_data;
     delete[] new_extra_bytes;
     if(meowmeow)
@@ -59,7 +61,7 @@ void Rom::done(bool meowmeow)
     * returns true if the patch was successfully applied,
     * false otherwise
 */
-bool Rom::inline_patch(string tool_folder, const char * patch_content)
+bool Rom::inline_patch(std::string tool_folder, const char * patch_content)
 {
     int new_size = rom_size - HEADER_SIZE;
 
@@ -69,9 +71,9 @@ bool Rom::inline_patch(string tool_folder, const char * patch_content)
         rom_data.read(&(raw_rom_data[HEADER_SIZE]), rom_size);
     }
 
-    ofstream(tool_folder+"asm/tmp.asm").write(patch_content, strlen(patch_content));
-    string tmp_path = filesystem::absolute(tool_folder+"asm/tmp.asm").string();
-    bool patch_res = asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
+    std::ofstream(tool_folder+"asm/tmp.asm").write(patch_content, std::strlen(patch_content));
+    std::string tmp_path = fs::absolute(tool_folder+"asm/tmp.asm").string();
+    bool patch_res = asar::asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
 
     if(patch_res)
         first_time = false;

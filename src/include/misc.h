@@ -3,17 +3,15 @@
 import std;
 import rapidjson;
 
-using namespace std;
-
 /*
     Auxiliary functions BOWSIE uses
     ---
 */
 
-void cleanup_str(string*);
-void acquire_rom(string*);
-void acquire_list(string*);
-bool cleanup(string tool_folder);
+void cleanup_str(std::string*);
+void acquire_rom(std::string*);
+void acquire_list(std::string*);
+bool cleanup(std::string tool_folder);
 
 /*
     error(format_string msg, Args... args) -> int: Print error message
@@ -24,13 +22,13 @@ bool cleanup(string tool_folder);
     Output:
     * always returns 1. Intended as an exit code
 */
-template<class... Args> int error(const format_string<Args...> msg, Args &&... args)
+template<class... Args> int error(const std::format_string<Args...> msg, Args &&... args)
 {
-    println(cerr, "ERROR: {}",format(msg, args...));
+    std::println(std::cerr, "ERROR: {}", std::format(msg, args...));
     #if defined(_WIN32)
-        system("pause");
+        std::system("pause");
     #else
-        printf("Press Enter to continue");
+        std::print("Press Enter to continue");
         getchar();
     #endif
     return 1;

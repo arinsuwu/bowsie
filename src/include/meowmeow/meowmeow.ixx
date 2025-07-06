@@ -17,8 +17,8 @@ export module meowmeow;
 import asar;
 import std;
 
-using namespace std;
-using namespace asar;
+using ios = std::ios;
+using uint8_t = std::uint8_t;
 
 #define HEADER_SIZE 512
 
@@ -61,8 +61,8 @@ namespace meOWmeOW
                 // Verify if there is an extra byte table already in ROM.
                 rom.old_extra_bytes = new char[0x80] { 0x03 };
 
-                const int extra_byte_loc = ow_rev ? snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE+EXTRA_BIT_OFFSET\
-                                                : snestopc_pick(rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE;
+                const int extra_byte_loc = ow_rev ? asar::snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE+EXTRA_BIT_OFFSET\
+                                                : asar::snestopc_pick(rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE;
                 const bool extra_bytes_enabled = ow_rev ? rom.read<1>(LVL_SPRITE_EXTRA_BYTES_PTR+3) == 0x42\
                                                         : rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+3) == 0x42;
 
@@ -97,7 +97,7 @@ namespace meOWmeOW
                 Output:
                 * true if the ROM data could be fixed (or meOWmeOW didn't need to run), false otherwise
             */
-            bool execute_meowmeow(Rom& rom, string tool_folder, vector<uint8_t>& new_sprite_data)
+            bool execute_meowmeow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data)
             {
                 // Verify whether we need meOWmeOW, by any extra byte changes
                 bool run_meowmeow = false;
@@ -112,32 +112,32 @@ namespace meOWmeOW
 
                 if(run_meowmeow)
                 {
-                    println("Extra byte changes detected. Running meOWmeOW to align data.");
+                    std::println("Extra byte changes detected. Running meOWmeOW to align data.");
                     return ow_rev ? exec_meowmeow_lvl(rom, tool_folder, new_sprite_data) : exec_meowmeow_ow(rom, tool_folder, new_sprite_data);
                 }
                 return true;
             }
 
         private:
-            bool exec_meowmeow_lvl(Rom& rom, string tool_folder, vector<uint8_t>& new_sprite_data)
+            bool exec_meowmeow_lvl(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data)
             {
                 char* old_level_extra_bytes = new char[0x400] {};
                 rom.rom_data.clear();
-                rom.rom_data.seekg(snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE);
+                rom.rom_data.seekg(asar::snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE);
                 rom.rom_data.read(old_level_extra_bytes, 0x400);
 
                 const int first_map = rom.read<2>(OWREV_FIRST_MAP_LVL, true);
                 const int submaps = rom.read<2>(OWREV_SUBMAPS, true);
 
-                string meowmeow_patch;
+                std::string meowmeow_patch;
 
                 for(int submaps_processed = 0; submaps_processed<=submaps; ++submaps_processed)
                 {
                     int curr_map = first_map+submaps_processed;
                     // Prepare ROM data by putting the needle in the first map's data.
                     rom.rom_data.clear();
-                    rom.rom_data.seekg(snestopc_pick( (rom.read<2>(LVL_SPRITE_DATA_PTR+(curr_map*2), true))|\
-                                                    (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK+curr_map)<<16) )+HEADER_SIZE);
+                    rom.rom_data.seekg(asar::snestopc_pick( (rom.read<2>(LVL_SPRITE_DATA_PTR+(curr_map*2), true))|\
+                                                            (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK+curr_map)<<16) )+HEADER_SIZE);
 
                     // Sprite header - see https://smwspeedruns.com/Level_Data_Format#Sprite_Header
                     uint8_t sprite_header = rom.rom_data.get();
@@ -217,10 +217,10 @@ namespace meOWmeOW
                     }
 
                     // Save table of corrected sprites per map level
-                    ofstream(tool_folder+"asm/new_sprite_data.bin", ios::binary).write((char *)new_sprite_data.data(), new_sprite_data.size());
+                    std::ofstream(tool_folder+"asm/new_sprite_data.bin", ios::binary).write((char *)new_sprite_data.data(), new_sprite_data.size());
 
                     // Generate patch per level
-                    meowmeow_patch = format("if read1($00FFD5) == $23\n\
+                    meowmeow_patch = std::format("if read1($00FFD5) == $23\n\
     if read1($00FFD7) == $0D\n\
         fullsa1rom\n\
     else\n\
@@ -248,7 +248,7 @@ new_sprite_data:\n\
                 return true;
             }
 
-            bool exec_meowmeow_ow(Rom& rom, string tool_folder, vector<uint8_t>& new_sprite_data)
+            bool exec_meowmeow_ow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data)
             {
                 const int ow_sprite_data = rom.read<3>(OW_SPRITE_DATA_PTR, true);
                 int submap_offset[OW_SUBMAPS] = { static_cast<int>(rom.read<2>(ow_sprite_data, true)),
@@ -264,7 +264,7 @@ new_sprite_data:\n\
 
                 // Prepare ROM data by putting the needle in the first map's data.
                 rom.rom_data.clear();
-                rom.rom_data.seekg(snestopc_pick(ow_sprite_data+submap_offset[0])+HEADER_SIZE);
+                rom.rom_data.seekg(asar::snestopc_pick(ow_sprite_data+submap_offset[0])+HEADER_SIZE);
                 while(1)
                 {
                     // These two are always present: they define a sprite number and its position.
@@ -283,7 +283,7 @@ new_sprite_data:\n\
 
                         // Move to next map's sprite data.
                         rom.rom_data.clear();
-                        rom.rom_data.seekg(snestopc_pick(ow_sprite_data+submap_offset[submaps_processed])+HEADER_SIZE);
+                        rom.rom_data.seekg(asar::snestopc_pick(ow_sprite_data+submap_offset[submaps_processed])+HEADER_SIZE);
 
                         // Store the new offset for new map and move on.
                         // The very first map (Main Map in LM) will *always* be 0x000E -- notice this is OW_SUBMAPS*2.
@@ -325,9 +325,9 @@ new_sprite_data:\n\
                 }
 
                 // Save table of corrected sprites
-                ofstream(tool_folder+"asm/new_sprite_data.bin", ios::binary).write((char *)new_sprite_data.data(), new_sprite_data.size());
+                std::ofstream(tool_folder+"asm/new_sprite_data.bin", ios::binary).write((char *)new_sprite_data.data(), new_sprite_data.size());
 
-                string meowmeow_patch = format("if read1($00FFD5) == $23\n\
+                std::string meowmeow_patch = std::format("if read1($00FFD5) == $23\n\
         if read1($00FFD7) == $0D\n\
             fullsa1rom\n\
         else\n\

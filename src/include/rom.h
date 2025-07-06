@@ -3,9 +3,6 @@
 import std;
 import asar;
 
-using namespace std;
-using namespace asar;
-
 #define HEADER_SIZE 512
 #define MAX_SIZE 1024*1024*16
 
@@ -15,8 +12,8 @@ using namespace asar;
 */
 struct Rom
 {
-    string rom_path;
-    ifstream rom_data;
+    std::string rom_path;
+    std::ifstream rom_data;
     int rom_size;
     char * raw_rom_data;
     char * old_extra_bytes;
@@ -26,7 +23,7 @@ struct Rom
     bool open_rom();
     bool reload();
     void done(bool);
-    bool inline_patch(string, const char *);
+    bool inline_patch(std::string, const char *);
 
     /*
         read<int bytes>(int addr, bool little_endian = false) -> uint: Read bytes from ROM
@@ -44,7 +41,7 @@ struct Rom
         int shift;
 
         rom_data.clear();
-        rom_data.seekg(snestopc_pick(addr)+HEADER_SIZE);
+        rom_data.seekg(asar::snestopc_pick(addr)+HEADER_SIZE);
         for(int i=0;i<bytes;++i)
         {
             shift = little_endian ? i*8 : (bytes-1-i)*8;

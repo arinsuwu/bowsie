@@ -1,6 +1,6 @@
 #include "settings.h"
 
-using namespace std;
+namespace ranges = std::ranges;
 
 /*
     deserialize_json(Document* json, string* err_str) -> bool: Parse settings
@@ -13,7 +13,7 @@ using namespace std;
     * true if settings were parsed correctly, false if not
     * err_str now contains any issues found
 */
-bool deserialize_json(Document* json, map<string, variant<bool, int, string>>& bowsie_settings, string* err_str)
+bool deserialize_json(rapidjson::Document* json, std::map<std::string, std::variant<bool, int, std::string>>& bowsie_settings, std::string* err_str)
 {
     bool status = true;
     *err_str = "Couldn't find key(s):\t\t\t\t";
@@ -31,7 +31,7 @@ bool deserialize_json(Document* json, map<string, variant<bool, int, string>>& b
     {
         if(!(*json)[key].IsBool())
         {
-            (*err_str).append(format("Incorrect data type for {}:\t\texpected Boolean\n", key));
+            (*err_str).append(std::format("Incorrect data type for {}:\t\texpected Boolean\n", key));
             status = false;
         }
         else
@@ -66,42 +66,42 @@ bool deserialize_json(Document* json, map<string, variant<bool, int, string>>& b
     - exits with error if a setting does not exist
     - bowsie_settings now contains the processed settings
 */
-void parse_cli_settings(vector<string>& cli_settings, map<string, variant<bool, int, string>>& bowsie_settings)
+void parse_cli_settings(std::vector<std::string>& cli_settings, std::map<std::string, std::variant<bool, int, std::string>>& bowsie_settings)
 {
     if(ranges::contains(cli_settings, "-h") || ranges::contains(cli_settings, "--help"))
     {
-        println("\t bowsie [switches] [rom] [list]\n");
-        println("Command line-specific switches");
-        println("  -h, --help\t\tDisplay this message and quit\n");
-        println("Command line or configuration file switches (bowsie-config.json)");
-        println("Pass as a command line argument in the form --<setting_name>=<value>");
-        println("See the readme for valid values");
-        println("  verbose\t\tDisplay all info per sprite inserted");
-        println("  generate_map16\tCreate .s16ov and .sscov files for LM display");
-        println("  meowmeow\t\tFix extra byte changes using meOWmeOW");
-        println("  slots\t\t\tAmount of OW sprites (max. 24)");
-        println("  use_maxtile\t\tEnable MaxTile granphics routines");
-        println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
-        println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
+        std::println("\t bowsie [switches] [rom] [list]\n");
+        std::println("Command line-specific switches");
+        std::println("  -h, --help\t\tDisplay this message and quit\n");
+        std::println("Command line or configuration file switches (bowsie-config.json)");
+        std::println("Pass as a command line argument in the form --<setting_name>=<value>");
+        std::println("See the readme for valid values");
+        std::println("  verbose\t\tDisplay all info per sprite inserted");
+        std::println("  generate_map16\tCreate .s16ov and .sscov files for LM display");
+        std::println("  meowmeow\t\tFix extra byte changes using meOWmeOW");
+        std::println("  slots\t\t\tAmount of OW sprites (max. 24)");
+        std::println("  use_maxtile\t\tEnable MaxTile granphics routines");
+        std::println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
+        std::println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
 
-        exit(0);
+        std::exit(0);
     }
 
-    string setting;
-    string param;
+    std::string setting;
+    std::string param;
     for(auto full_setting : cli_settings)
     {
-        setting = full_setting.contains("=") ? string(full_setting.begin(), full_setting.begin()+full_setting.find_first_of("=")) : full_setting;
-        param = full_setting.contains("=") ? string(full_setting.begin()+full_setting.find_first_of("=")+1, full_setting.end()) : "";
+        setting = full_setting.contains("=") ? std::string(full_setting.begin(), full_setting.begin()+full_setting.find_first_of("=")) : full_setting;
+        param = full_setting.contains("=") ? std::string(full_setting.begin()+full_setting.find_first_of("=")+1, full_setting.end()) : "";
 
         if(!ranges::contains(cli_keys, setting))
-            exit(error("Unknown setting {}", setting));
+            std::exit(error("Unknown setting {}", setting));
 
-        string setting_name = string(setting.begin()+2, setting.end());
+        std::string setting_name = std::string(setting.begin()+2, setting.end());
         if(ranges::contains(bool_keys, setting_name))
         {
             if(!(param=="true" || param=="false"))
-                exit(error("Unknown parameter for {}: extected true/false", setting));
+                std::exit(error("Unknown parameter for {}: extected true/false", setting));
             else
                 bowsie_settings[setting_name] = param=="true" ? true : false;
         }
@@ -109,13 +109,13 @@ void parse_cli_settings(vector<string>& cli_settings, map<string, variant<bool, 
         {
             try
             {
-                size_t pos {};
+                std::size_t pos {};
                 int slots = stoi(param, &pos);
                 bowsie_settings[setting_name] = slots;
             }
-            catch(exception const & err)
+            catch(std::exception const & err)
             {
-                exit(error("Error parsing amount of slots given."));
+                std::exit(error("Error parsing amount of slots given."));
             }
         }
         else if(setting_name=="custom_method_name")

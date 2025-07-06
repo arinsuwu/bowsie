@@ -3,13 +3,13 @@
 import std;
 import rapidjson;
 
-using namespace std;
-using namespace rapidjson;
+namespace fs = std::filesystem;
+using ios = std::ios;
 
 // I/O functions
 
 /*
-    deserialize_json(Document* json, string* err_str) -> bool: Parse Map16 JSON
+    deserialize_json(rapidjson::Document* json, std::string* err_str) -> bool: Parse Map16 JSON
     ---
     Input:
     * json is a pointer to the (rapidjson) parsed JSON file
@@ -19,7 +19,7 @@ using namespace rapidjson;
     * true if Map16 tooltip information was parsed correctly, false if not.
     * err_str now contains any issues found
 */
-bool Map16::deserialize_json(Document* json, string* err_str)
+bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
 {
     bool status = true;
     static const char * keys[] = {"tooltip", "no_tiles"};
@@ -60,7 +60,7 @@ bool Map16::deserialize_json(Document* json, string* err_str)
     
     for(int i=1;i<=no_tiles;++i)
     {
-        string c = format("tile_{}", i);
+        std::string c = std::format("tile_{}", i);
         const char * curr = c.c_str();
         if(!(*json).HasMember(curr))
         {
@@ -70,7 +70,7 @@ bool Map16::deserialize_json(Document* json, string* err_str)
         }
         else if(!(*json)[curr].IsObject())
         {
-            (*err_str).append(format("\n{} is not a tile (so a JSON structure)\n", curr));
+            (*err_str).append(std::format("\n{} is not a tile (so a JSON structure)\n", curr));
             status = false;
             break;
         }
@@ -168,8 +168,8 @@ bool Map16::deserialize_json(Document* json, string* err_str)
 */
 void Map16::open_s16ov(const char* filename)
 {
-    ofstream(filename, ios::binary).write(map16_page, MAP16_SIZE);
-    s16ov = ifstream(filename, ios::binary);
+    std::ofstream(filename, ios::binary).write(map16_page, MAP16_SIZE);
+    s16ov = std::ifstream(filename, ios::binary);
 }
 
 /*
@@ -183,8 +183,8 @@ void Map16::open_s16ov(const char* filename)
 */
 void Map16::open_sscov(const char* filename)
 {
-    ofstream(filename, ios::app).write("", 0);
-    sscov = ofstream(filename, ios::app);
+    std::ofstream(filename, ios::app).write("", 0);
+    sscov = std::ofstream(filename, ios::app);
 }
 
 /*
@@ -195,7 +195,7 @@ void Map16::open_sscov(const char* filename)
 */
 void Map16::done(const char* filename)
 {
-    ofstream(filename, ios::binary).write(map16_page, MAP16_SIZE);
+    std::ofstream(filename, ios::binary).write(map16_page, MAP16_SIZE);
     delete[] map16_page;
 }
 
@@ -242,7 +242,7 @@ bool Map16::write_single_map16_tile(int tile_number, int yxppccct, int pos)
 }
 
 /*
-    write_map16_tiles(string* err_string) -> int *: Write set of map16 tiles
+    write_map16_tiles(std::string* err_string) -> int *: Write set of map16 tiles
     ---
     Input:
     * deserialize_json has been run
@@ -252,7 +252,7 @@ bool Map16::write_single_map16_tile(int tile_number, int yxppccct, int pos)
     * returns an integer array with the tile position in the page. if it contains -1, then an error occurred.
         * err_string contains said info
 */
-int * Map16::write_map16_tiles(string* err_string)
+int * Map16::write_map16_tiles(std::string* err_string)
 {
     int * map16_numbers = new int [no_tiles] { 0x00 };
     for(int i=0; i<no_tiles; ++i)
@@ -261,7 +261,7 @@ int * Map16::write_map16_tiles(string* err_string)
         if(pos == -1 || pos > MAP16_SIZE-8)
         {
             map16_numbers[i] = -1;
-            (*err_string).append(format("Not enough map16 space while starting to write a tile. Position is {}", pos));
+            (*err_string).append(std::format("Not enough map16 space while starting to write a tile. Position is {}", pos));
             return map16_numbers;
         }
         int tile = tile_num[i];
@@ -298,7 +298,7 @@ int * Map16::write_map16_tiles(string* err_string)
             if(tmp)
             {
                 map16_numbers[i] = -1;
-                (*err_string).append(format("Not enough map16 space while writing part of a 16x16 tile. Position is {}", pos));
+                (*err_string).append(std::format("Not enough map16 space while writing part of a 16x16 tile. Position is {}", pos));
                 return map16_numbers;
             }
             map16_numbers[i] = (pos/8)+0x400;
@@ -308,7 +308,7 @@ int * Map16::write_map16_tiles(string* err_string)
             if(!write_single_map16_tile(tile, yxppccct, pos))
             {
                 map16_numbers[i] = -1;
-                (*err_string).append(format("Not enough map16 space while writing an 8x8 tile. Position is {}", pos));
+                (*err_string).append(std::format("Not enough map16 space while writing an 8x8 tile. Position is {}", pos));
                 return map16_numbers;
             }
             map16_numbers[i] = (pos/8)+0x400;
@@ -320,7 +320,7 @@ int * Map16::write_map16_tiles(string* err_string)
 // Tooltip (and main) function
 
 /*
-    write_tooltip(int sprite_number, string* err_string) -> bool: Write tooltip for custom sprite
+    write_tooltip(int sprite_number, std::string* err_string) -> bool: Write tooltip for custom sprite
     ---
     Input:
     * sprite_number is the OW sprite slot
@@ -330,19 +330,19 @@ int * Map16::write_map16_tiles(string* err_string)
     * true in success, false otherwise
     * if false, err_string now contains the error info
 */
-bool Map16::write_tooltip(int sprite_number, string* err_string)
+bool Map16::write_tooltip(int sprite_number, std::string* err_string)
 {
-    string str = format("{:X}\t10\t{}\n", sprite_number, tooltip);
+    std::string str = std::format("{:X}\t10\t{}\n", sprite_number, tooltip);
     sscov.write(str.c_str(), str.size());
     if(no_tiles)
     {
         int * map16_numbers = write_map16_tiles(err_string);
-        str = format("{:X}\t12\t", sprite_number);
+        str = std::format("{:X}\t12\t", sprite_number);
         for(int i=0;i<no_tiles;)
         {
             if(map16_numbers[i]==-1)
                 return false;
-            str.append(format("{},{},{:X}\t", x_offset[i], y_offset[i], map16_numbers[i]));
+            str.append(std::format("{},{},{:X}\t", x_offset[i], y_offset[i], map16_numbers[i]));
             x_offset.pop_back();
             y_offset.pop_back();
             if(!is_16x16[i])
@@ -359,7 +359,7 @@ bool Map16::write_tooltip(int sprite_number, string* err_string)
 }
 
 /*
-    destroy_map16(string filename) -> void: delete OW sprite map16 files
+    destroy_map16(std::string filename) -> void: delete OW sprite map16 files
     ---
     Input:
     * filename is the ROM filepath+name (no extension)
@@ -367,18 +367,18 @@ bool Map16::write_tooltip(int sprite_number, string* err_string)
     Output:
     * sprite map16 files erased from disk (if they existed)
 */
-bool destroy_map16(string filename)
+bool destroy_map16(std::string filename)
 {
     try
     {
-        if(filesystem::exists(filename+".s16ov"))
-            filesystem::remove(filename+".s16ov");
-        if(filesystem::exists(filename+".sscov"))
-            filesystem::remove(filename+".sscov");
+        if(fs::exists(filename+".s16ov"))
+            fs::remove(filename+".s16ov");
+        if(fs::exists(filename+".sscov"))
+            fs::remove(filename+".sscov");
 
         return true;
     }
-    catch(filesystem::filesystem_error const & err)
+    catch(fs::filesystem_error const & err)
     {
         println("There was an error deleting the existing Map16 files. Details: {}", err.code().message());
         return false;
