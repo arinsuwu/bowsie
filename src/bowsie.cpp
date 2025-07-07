@@ -33,8 +33,7 @@
 #include <fmt/base.h>
 
 #include "include/asar/asar.h"
-#include "include/rapidjson/document.h"
-#include "include/rapidjson/istreamwrapper.h"
+#include <nlohmann/json.hpp>
 
 #include "include/meowmeow/meowmeow.h"
 
@@ -141,7 +140,7 @@ int main(int argc, char *argv[])
         Parse settings
     */
     bool settings_json_exists = false;
-    rapidjson::Document settings_json;
+    nlohmann::json settings_json;
 
     // First we look for bowsie-config.json in the ROM path
     // if not there, we look in the root folder
@@ -179,10 +178,8 @@ int main(int argc, char *argv[])
 
         if(process_json)
         {
-            rapidjson::BasicIStreamWrapper isw(ifs);
-
-            settings_json.ParseStream(isw);
-            if(settings_json.HasParseError())
+			settings_json = nlohmann::json::parse(ifs, nullptr, false);
+            if(settings_json.is_discarded())
                 exit(error("A problem occurred while parsing bowsie-config.json. Please ensure the file isn't corrupted and has a valid JSON format. Check the readme for more information."));
             else
                 settings_json_exists = true;
@@ -192,7 +189,7 @@ int main(int argc, char *argv[])
     if(settings_json_exists)
     {
         std::string settings_err;
-        if(!deserialize_json(&settings_json, bowsie_settings, &settings_err))
+        if(!deserialize_json(settings_json, bowsie_settings, &settings_err))
             exit(error("A problem occurred while parsing specific settings. Details:\n{}", settings_err));
     }
 
@@ -569,15 +566,13 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
                 std::ifstream ifs(sprite_tooltip_path);
                 if(!(!ifs))
                 {
-                    rapidjson::Document sprite_tooltip;
-                    rapidjson::BasicIStreamWrapper isw(ifs);
                     std::string e;
                     if(verbose)
                         fmt::println("Parsing tooltip information for {}...", sprite_filename);
-                    sprite_tooltip.ParseStream(isw);
-                    if(sprite_tooltip.HasParseError())
+                    nlohmann::json sprite_tooltip = nlohmann::json::parse(ifs, nullptr, false /* disallow_exceptions */);
+                    if(sprite_tooltip.is_discarded())
                         exit(error("A problem occurred while parsing {}. Please ensure the file isn't corrupted and has a valid JSON format.", sprite_tooltip_path));
-                    if(!map16.deserialize_json(&sprite_tooltip, &e))
+                    if(!map16.deserialize_json(sprite_tooltip, &e))
                         exit(error("A problem occurred while parsing specific tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
                     e = "";
                     if(!map16.write_tooltip(sprite_number, &e))

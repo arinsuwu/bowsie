@@ -8,7 +8,7 @@
 
 #include <fmt/base.h>
 
-#include "rapidjson/document.h"
+#include <nlohmann/json.hpp>
 
 #define MAP16_SIZE 0x100*8
 
@@ -38,7 +38,7 @@ struct Map16
     std::ofstream sscov;
 
     // I/O functions
-    bool deserialize_json(rapidjson::Document*, std::string*);
+    bool deserialize_json(nlohmann::json&, std::string*);
     void open_s16ov(const char*);
     void open_sscov(const char*);
     void done(const char*);
