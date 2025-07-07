@@ -24,3 +24,8 @@ target_link_libraries(bowsie
     PRIVATE nlohmann_json::nlohmann_json
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND LINUX)
+    target_compile_options(bowsie PRIVATE -fsanitize=address)
+    target_link_options(bowsie PRIVATE -fsanitize=address)
+endif()
+
