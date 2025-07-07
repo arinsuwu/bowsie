@@ -1,8 +1,5 @@
 #include "misc.h"
 
-import std;
-import rapidjson;
-
 namespace fs = std::filesystem;
 
 /*
@@ -36,7 +33,7 @@ void acquire_rom(std::string* rom_path)
 {
     while(1)
     {
-        std::print("Select ROM file: ");
+        fmt::print("Select ROM file: ");
         std::getline(std::cin, *rom_path);
         cleanup_str(rom_path);
         if(!rom_path->ends_with(".smc") && !rom_path->ends_with(".sfc"))
@@ -59,7 +56,7 @@ void acquire_list(std::string* list_path)
 {
     while(1)
     {
-        std::print("Select list file (.txt only): ");
+        fmt::print("Select list file (.txt only): ");
         std::getline(std::cin, *list_path);
         cleanup_str(list_path);
         if(!list_path->ends_with(".txt"))
@@ -90,7 +87,7 @@ bool cleanup(std::string tool_folder)
     }
     catch(fs::filesystem_error const & err)
     {
-        std::println("There was an error cleaning up temporary files. Details: {}", err.code().message());
+        fmt::println("There was an error cleaning up temporary files. Details: {}", err.code().message());
         return false;
     }
 }

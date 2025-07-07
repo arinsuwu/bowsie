@@ -1,8 +1,5 @@
 #include "map16.h"
 
-import std;
-import rapidjson;
-
 namespace fs = std::filesystem;
 using ios = std::ios;
 
@@ -380,7 +377,7 @@ bool destroy_map16(std::string filename)
     }
     catch(fs::filesystem_error const & err)
     {
-        println("There was an error deleting the existing Map16 files. Details: {}", err.code().message());
+        fmt::println("There was an error deleting the existing Map16 files. Details: {}", err.code().message());
         return false;
     }
 }

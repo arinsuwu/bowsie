@@ -1,7 +1,14 @@
 #pragma once
 
-import std;
-import rapidjson;
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include <fmt/base.h>
+
+#include "rapidjson/document.h"
 
 #define MAP16_SIZE 0x100*8
 

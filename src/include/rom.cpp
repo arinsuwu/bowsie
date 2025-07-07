@@ -20,6 +20,7 @@ bool Rom::open_rom()
     rom_size = rom_data.tellg();
     raw_rom_data = new char[MAX_SIZE] { 0x00 };
     first_time = true;
+    mapper = asar_getmapper();
     return !(!rom_data);
 }
 
@@ -73,7 +74,7 @@ bool Rom::inline_patch(std::string tool_folder, const char * patch_content)
 
     std::ofstream(tool_folder+"asm/tmp.asm").write(patch_content, std::strlen(patch_content));
     std::string tmp_path = fs::absolute(tool_folder+"asm/tmp.asm").string();
-    bool patch_res = asar::asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
+    bool patch_res = asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
 
     if(patch_res)
         first_time = false;

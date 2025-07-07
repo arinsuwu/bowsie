@@ -1,35 +1,35 @@
-cmake_minimum_required(VERSION 4.1.0-rc1 FATAL_ERROR)
+cmake_minimum_required(VERSION 4.0.0 FATAL_ERROR)
 
-set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
-set(CMAKE_CXX_MODULE_STD ON)
+include(FetchContent)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-add_library(asar)
-add_library(rapidjson)
-add_library(meowmeow)
+set(ASAR_TARGET "asar-static")
 
-target_sources(asar
-    PUBLIC
-    FILE_SET CXX_MODULES FILES
-        asar/asar.ixx
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        40626af88bd7df9a5fb80be7b25ac85b122d6c21
 )
+FetchContent_MakeAvailable(fmt)
+  
+FetchContent_Declare(
+  asar
+  GIT_REPOSITORY https://github.com/RPGHacker/asar
+  GIT_TAG v1.91
+  SOURCE_SUBDIR src
+)
+FetchContent_MakeAvailable(asar)
 
-target_sources(rapidjson
-    PUBLIC
-    FILE_SET CXX_MODULES FILES
-        rapidjson/rapidjson.ixx
-)
-
-target_sources(meowmeow
-    PUBLIC
-    FILE_SET CXX_MODULES FILES
-        meowmeow/meowmeow.ixx
-)
-target_link_libraries(meowmeow
-    PRIVATE asar
-    PRIVATE rapidjson
-)
+set_target_properties(${ASAR_TARGET} PROPERTIES CXX_STANDARD 14)
+    
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  set_target_properties(${ASAR_TARGET} PROPERTIES COMPILE_OPTIONS "-w;-fPIC")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set_target_properties(${ASAR_TARGET} PROPERTIES COMPILE_OPTIONS "/w")
+else ()
+  message(FATAL_ERROR "Unrecognized compiler")
+endif()
 

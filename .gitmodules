@@ -1,0 +1,3 @@
+[submodule "src/include/asar-static"]
+	path = src/include/asar-static
+	url = https://github.com/RPGHacker/asar

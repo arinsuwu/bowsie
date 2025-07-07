@@ -1,7 +1,13 @@
 #pragma once
 
-import std;
-import rapidjson;
+#include <filesystem>
+#include <iostream>
+#include <string>
+
+#include <cstdio>
+#include <cstdlib>
+
+#include <fmt/base.h>
 
 /*
     Auxiliary functions BOWSIE uses
@@ -24,11 +30,11 @@ bool cleanup(std::string tool_folder);
 */
 template<class... Args> int error(const std::format_string<Args...> msg, Args &&... args)
 {
-    std::println(std::cerr, "ERROR: {}", std::format(msg, args...));
+    fmt::println(stderr, "ERROR: {}", std::format(msg, args...));
     #if defined(_WIN32)
-        std::system("pause");
+        system("pause");
     #else
-        std::print("Press Enter to continue");
+        fmt::print("Press Enter to continue");
         getchar();
     #endif
     return 1;

@@ -71,6 +71,7 @@ ___BOWSIE___
   - MaxTile enabled.
 - Added support for 6 and 8MB SA-1 ROMs.
 - BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
+- BOWSIE now includes CMake lists: from now on, all releases will be built using CMake with Clang as the default compiler and Ninja as the generator. Check the readme for more details.
 
 ___Deprecated features___
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.
@@ -78,6 +79,7 @@ ___Deprecated features___
 
 
 ### Bug Fixes
+- Fixed being able to pass negative values to the Map16 generator, as well as a crash that occurred as a result of invalid memory allocation when not drawing any tiles. With the compiler change, this crash was made apparent.
 - Fixed a crash in the VLDC9 system when using sprite numbers `55-7F` -- the high byte of the index to the pointers was being lost.
 - Fixed reading garbage when the pointer to sprite data was not inserted (equal to `$000000`). This was a regression issue introduced when I cleaned the code in my modified PIXI builds.
 - Fixed a freespace leak in bank 4 when using OW Revolution.

@@ -68,21 +68,21 @@ bool deserialize_json(rapidjson::Document* json, std::map<std::string, std::vari
 */
 void parse_cli_settings(std::vector<std::string>& cli_settings, std::map<std::string, std::variant<bool, int, std::string>>& bowsie_settings)
 {
-    if(ranges::contains(cli_settings, "-h") || ranges::contains(cli_settings, "--help"))
+    if( (ranges::find(cli_settings, "-h")!=ranges::end(cli_settings) ) || ( ranges::find(cli_settings, "--help")!=ranges::end(cli_settings) ) )
     {
-        std::println("\t bowsie [switches] [rom] [list]\n");
-        std::println("Command line-specific switches");
-        std::println("  -h, --help\t\tDisplay this message and quit\n");
-        std::println("Command line or configuration file switches (bowsie-config.json)");
-        std::println("Pass as a command line argument in the form --<setting_name>=<value>");
-        std::println("See the readme for valid values");
-        std::println("  verbose\t\tDisplay all info per sprite inserted");
-        std::println("  generate_map16\tCreate .s16ov and .sscov files for LM display");
-        std::println("  meowmeow\t\tFix extra byte changes using meOWmeOW");
-        std::println("  slots\t\t\tAmount of OW sprites (max. 24)");
-        std::println("  use_maxtile\t\tEnable MaxTile granphics routines");
-        std::println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
-        std::println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
+        fmt::println("\t bowsie [switches] [rom] [list]\n");
+        fmt::println("Command line-specific switches");
+        fmt::println("  -h, --help\t\tDisplay this message and quit\n");
+        fmt::println("Command line or configuration file switches (bowsie-config.json)");
+        fmt::println("Pass as a command line argument in the form --<setting_name>=<value>");
+        fmt::println("See the readme for valid values");
+        fmt::println("  verbose\t\tDisplay all info per sprite inserted");
+        fmt::println("  generate_map16\tCreate .s16ov and .sscov files for LM display");
+        fmt::println("  meowmeow\t\tFix extra byte changes using meOWmeOW");
+        fmt::println("  slots\t\t\tAmount of OW sprites (max. 24)");
+        fmt::println("  use_maxtile\t\tEnable MaxTile granphics routines");
+        fmt::println("  custom_dir\t\tPath to the asm file which handles the new OW sprites");
+        fmt::println("  bypass_ram_check\tIgnore RAM boundaries (and by extension, sprite limit)");
 
         std::exit(0);
     }
@@ -91,17 +91,17 @@ void parse_cli_settings(std::vector<std::string>& cli_settings, std::map<std::st
     std::string param;
     for(auto full_setting : cli_settings)
     {
-        setting = full_setting.contains("=") ? std::string(full_setting.begin(), full_setting.begin()+full_setting.find_first_of("=")) : full_setting;
-        param = full_setting.contains("=") ? std::string(full_setting.begin()+full_setting.find_first_of("=")+1, full_setting.end()) : "";
+        setting = ( full_setting.find("=")!=std::string::npos ) ? std::string(full_setting.begin(), full_setting.begin()+full_setting.find_first_of("=")) : full_setting;
+        param = ( full_setting.find("=")!=std::string::npos ) ? std::string(full_setting.begin()+full_setting.find_first_of("=")+1, full_setting.end()) : "";
 
-        if(!ranges::contains(cli_keys, setting))
-            std::exit(error("Unknown setting {}", setting));
+        if(ranges::find(cli_keys, setting)==ranges::end(cli_keys))
+            exit(error("Unknown setting {}", setting));
 
         std::string setting_name = std::string(setting.begin()+2, setting.end());
-        if(ranges::contains(bool_keys, setting_name))
+        if(ranges::find(bool_keys, setting_name)!=ranges::end(bool_keys))
         {
             if(!(param=="true" || param=="false"))
-                std::exit(error("Unknown parameter for {}: extected true/false", setting));
+                exit(error("Unknown parameter for {}: extected true/false", setting));
             else
                 bowsie_settings[setting_name] = param=="true" ? true : false;
         }
@@ -109,13 +109,13 @@ void parse_cli_settings(std::vector<std::string>& cli_settings, std::map<std::st
         {
             try
             {
-                std::size_t pos {};
+                size_t pos {};
                 int slots = stoi(param, &pos);
                 bowsie_settings[setting_name] = slots;
             }
             catch(std::exception const & err)
             {
-                std::exit(error("Error parsing amount of slots given."));
+                exit(error("Error parsing amount of slots given."));
             }
         }
         else if(setting_name=="custom_method_name")

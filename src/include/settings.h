@@ -1,9 +1,20 @@
 #pragma once
 
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <map>
+#include <ranges>
+#include <variant>
+#include <vector>
+
+#include <fmt/base.h>
+
+#include "rapidjson/document.h"
+
 #include "misc.h"
 
-import std;
-import rapidjson;
 
 // CLI settings
 static const char * cli_keys[] = {"--verbose", "--generate_map16", "--meowmeow",

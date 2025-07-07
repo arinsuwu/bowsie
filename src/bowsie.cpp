@@ -21,15 +21,27 @@
  * meOWmeOW is (c) 2025 Erik, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
 */
 
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <map>
+#include <variant>
+#include <vector>
+
+#include <cstdint>
+
+#include <fmt/base.h>
+
+#include "include/asar/asar.h"
+#include "include/rapidjson/document.h"
+#include "include/rapidjson/istreamwrapper.h"
+
+#include "include/meowmeow/meowmeow.h"
+
 #include "include/misc.h"
 #include "include/map16.h"
 #include "include/rom.h"
 #include "include/settings.h"
-
-import std;
-import asar;
-import rapidjson;
-import meowmeow;
 
 #define VERSION 1
 #define SUBVER 10
@@ -48,9 +60,9 @@ namespace fs = std::filesystem;
 
 int main(int argc, char *argv[])
 {
-    std::println("BOWSIE - Better Overworld Sprite Insertion Engine");
-    std::println("\t v{}.{:0>2}", VERSION, SUBVER);
-    std::println("\t By Erik\n");
+    fmt::println("BOWSIE - Better Overworld Sprite Insertion Engine");
+    fmt::println("\t v{}.{:0>2}", VERSION, SUBVER);
+    fmt::println("\t By Erik\n");
 
     Rom rom;
 
@@ -120,10 +132,10 @@ int main(int argc, char *argv[])
     std::string method;
 
     if(!rom.open_rom())
-        std::exit(error("Couldn't open ROM file {}", rom.rom_path));
+        exit(error("Couldn't open ROM file {}", rom.rom_path));
     std::ifstream list(list_path);
     if(!list)
-        std::exit(error("Couldn't open list file {}", list_path));
+        exit(error("Couldn't open list file {}", list_path));
 
     /*
         Parse settings
@@ -154,14 +166,14 @@ int main(int argc, char *argv[])
             if(!(!ifs))
             {
                 if(cli_settings)
-                    std::println("WARNING: bowsie-config.json exists but CLI settings were also passed. The CLI settings will be ignored.");
+                    fmt::println("WARNING: bowsie-config.json exists but CLI settings were also passed. The CLI settings will be ignored.");
                 process_json = true;
             }
         }
         else
         {
             if(cli_settings)
-                std::println("WARNING: bowsie-config.json exists but CLI settings were also passed. The CLI settings will be ignored.");
+                fmt::println("WARNING: bowsie-config.json exists but CLI settings were also passed. The CLI settings will be ignored.");
             process_json = true;
         }
 
@@ -171,7 +183,7 @@ int main(int argc, char *argv[])
 
             settings_json.ParseStream(isw);
             if(settings_json.HasParseError())
-                std::exit(error("A problem occurred while parsing bowsie-config.json. Please ensure the file isn't corrupted and has a valid JSON format. Check the readme for more information."));
+                exit(error("A problem occurred while parsing bowsie-config.json. Please ensure the file isn't corrupted and has a valid JSON format. Check the readme for more information."));
             else
                 settings_json_exists = true;
         }
@@ -181,7 +193,7 @@ int main(int argc, char *argv[])
     {
         std::string settings_err;
         if(!deserialize_json(&settings_json, bowsie_settings, &settings_err))
-            std::exit(error("A problem occurred while parsing specific settings. Details:\n{}", settings_err));
+            exit(error("A problem occurred while parsing specific settings. Details:\n{}", settings_err));
     }
 
     bool verbose = std::get<bool>(bowsie_settings["verbose"]);
@@ -197,7 +209,7 @@ int main(int argc, char *argv[])
     if(rom.read<2>(0x048000)==0x5946 && rom.read<2>(0x048002)==0x4F52)
     {
         if(verbose)
-            std::println("Overworld Revolution detected.\n  MaxTile has been enabled.");
+            fmt::println("Overworld Revolution detected.\n  MaxTile has been enabled.");
 
         ow_rev = true;
         method = "owrev";
@@ -217,43 +229,43 @@ int main(int argc, char *argv[])
         Verify settings
     */
     if(slots<=0)
-        std::exit(error("Can't have zero or less slots. It makes no sense."));
+        exit(error("Can't have zero or less slots. It makes no sense."));
     if(!ow_rev)
     {
         if(slots>24 && !bypass_ram_check)
-            std::exit(error("Can't have more than 24 slots due to memory limitations."));
+            exit(error("Can't have more than 24 slots due to memory limitations."));
     }
     else
     {
         if(slots>32 && !bypass_ram_check)
-            std::exit(error("Can't have more than 32 slots due to memory limitations."));
+            exit(error("Can't have more than 32 slots due to memory limitations."));
     }
     if( bypass_ram_check && method!="custom" && slots>255 )
-        std::exit(error("Can't have more than 255 slots without a custom insertion handler."));
+        exit(error("Can't have more than 255 slots without a custom insertion handler."));
     if(method!="vldc9" && method!="owrev" && method!="custom")
-        std::exit(error("Unknown insertion method: {}", method));
+        exit(error("Unknown insertion method: {}", method));
 
     // Misc. ROM checks
     if(rom.rom_size<0x100000)
-        std::exit(error("This ROM is clean. Please edit it in Lunar Magic."));
+        exit(error("This ROM is clean. Please edit it in Lunar Magic."));
     if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
-        std::exit(error("Title mismatch. Is this ROM headered?"));
+        exit(error("Title mismatch. Is this ROM headered?"));
 
     if(verbose)
     {
-        std::println("\nVerbose mode enabled.");
-        std::println("Running BOWSIE with");
-        std::println("Slots:\t\t\t\t{}", slots);
-        std::println("Insertion method:\t\t{} {}", method, method=="custom" ? "("+custom_method_name+")" : "");
-        std::println("MaxTile:\t\t\t{}", use_maxtile ? "Enabled" : "Disabled");
-        std::println("meOWmeOW:\t\t\t{}", run_meowmeow ? "Enabled" : "Disabled");
-        std::println("RAM checks:\t\t\t{}", bypass_ram_check ? "Ignored (!)" : "Enabled");
-        std::println("Asar version: v{}.{}{}\n", (int)(((asar::asar_version()%100000)-(asar::asar_version()%1000))/10000),
-                                                 (int)(((asar::asar_version()%1000)-(asar::asar_version()%10))/100),
-                                                 (int)(asar::asar_version()%10));
+        fmt::println("\nVerbose mode enabled.");
+        fmt::println("Running BOWSIE with");
+        fmt::println("Slots:\t\t\t\t{}", slots);
+        fmt::println("Insertion method:\t\t{} {}", method, method=="custom" ? "("+custom_method_name+")" : "");
+        fmt::println("MaxTile:\t\t\t{}", use_maxtile ? "Enabled" : "Disabled");
+        fmt::println("meOWmeOW:\t\t\t{}", run_meowmeow ? "Enabled" : "Disabled");
+        fmt::println("RAM checks:\t\t\t{}", bypass_ram_check ? "Ignored (!)" : "Enabled");
+        fmt::println("Asar version: v{}.{}{}\n", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
+                                                 (int)(((asar_version()%1000)-(asar_version()%10))/100),
+                                                 (int)(asar_version()%10));
     }
     else
-        std::println("");
+        fmt::println("");
 
     int asar_errcount = 0;
     std::string tool_folder = fs::absolute(argv[0]).parent_path().string()+"/";
@@ -269,13 +281,13 @@ int main(int argc, char *argv[])
             {
                 method_patch.open(tool_folder+"asm/"+custom_method_name+".asm", ios::ate);
                 if(!method_patch)
-                    std::exit(error("Couldn't open ASM files for custom method {0}. Make sure {0}.asm is in the asm folder.", custom_method_name));
+                    exit(error("Couldn't open ASM files for custom method {0}. Make sure {0}.asm is in the asm folder.", custom_method_name));
             }
             else
             {
                 method_patch.open(tool_folder+"asm/"+method+".asm", ios::ate);
                 if(!method_patch)
-                    std::exit(error("Couldn't open ASM files for insertion method {0}. Make sure {0}.asm is in the asm folder.", method));
+                    exit(error("Couldn't open ASM files for insertion method {0}. Make sure {0}.asm is in the asm folder.", method));
             }
             method_patch.seekg(0);
             std::getline(method_patch, tmp, '\0');
@@ -287,9 +299,9 @@ int main(int argc, char *argv[])
     if( (rom.read<2>(BOWSIE_USED_PTR)==(MAGIC_CONSTANT&0xFFFF0000)>>16) && (rom.read<2>(BOWSIE_USED_PTR+2)==(MAGIC_CONSTANT&0xFFFF)) )
     {
         if(verbose)
-            std::println("Performing clean-up of a previous execution...");
+            fmt::println("Performing clean-up of a previous execution...");
         if(!destroy_map16(rom_name))
-            std::exit(error("Error cleaning up existing Map16 files. Exiting..."));
+            exit(error("Error cleaning up existing Map16 files. Exiting..."));
 
         std::string clean_patch;
         int clean_offset = 4;
@@ -310,11 +322,11 @@ int main(int argc, char *argv[])
                                               rom.read<2>(OWREV_LOAD_HACK_PTR+1, true), BOWSIE_USED_PTR));
                 }
         if(!rom.inline_patch(tool_folder, clean_patch.c_str()))
-            std::exit(error("An error ocurred while cleaning up. Details:\n  {}", asar::asar_geterrors(&asar_errcount)->fullerrdata));
+            exit(error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
         if(!rom.reload())
-            std::exit(error("An error ocurred while cleaning up."));
+            exit(error("An error ocurred while cleaning up."));
         else if(verbose)
-            std::println("Clean-up done.\n");
+            fmt::println("Clean-up done.\n");
 
     }
     else
@@ -370,11 +382,11 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             {
                 defines.append(std::format("!owrev_bank_4_freespace = ${:0>6X}\n", 0x04ACD0+i));
                 if(verbose)
-                    std::println("Using OW Revolution bank 4 freespace located at ${:0>6X}\n", 0x04ACD0+i);
+                    fmt::println("Using OW Revolution bank 4 freespace located at ${:0>6X}\n", 0x04ACD0+i);
                 break;
             }
             if(0x04ACD0+i>=BOWSIE_USED_PTR)
-                std::exit(error("Found no OW Revolution freespace in bank 4."));
+                exit(error("Found no OW Revolution freespace in bank 4."));
         }
     }
     std::ofstream(tool_folder+"asm/bowsie_defines.asm").write(defines.c_str(), defines.size());
@@ -395,14 +407,14 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
 
     int offset = 0;
     if(!rom.inline_patch(tool_folder, (routine_macro+routine_content).c_str()))
-        std::exit(error("An error ocurred while inserting shared subroutines. Details:\n  {}", asar::asar_geterrors(&asar_errcount)->fullerrdata));
+        exit(error("An error ocurred while inserting shared subroutines. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
     else
     {
         routine_macro = "";
         routine_content = "";
         if(verbose)
-            std::println("===========================================================");
-        auto routine_print = asar::asar_getprints(&asar_errcount);
+            fmt::println("===========================================================");
+        auto routine_print = asar_getprints(&asar_errcount);
         for(int i=0;i<asar_errcount;++i)
         {
             std::string routine_addr(routine_print[i]);
@@ -411,11 +423,11 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             routine_content.append(std::format("org ${:0>6X}\n    dl {}\n", BOWSIE_USED_PTR+4+(i*3), routine_addr));
             if(verbose)
             {
-                std::println("{}", routine_print[i]);
-                std::println("-----------------------------------------------------------");
+                fmt::println("{}", routine_print[i]);
+                fmt::println("-----------------------------------------------------------");
             }
         }
-        std::println("{} shared subroutines inserted.{}", asar_errcount, verbose ? "\n===========================================================\n" : "");
+        fmt::println("{} shared subroutines inserted.{}", asar_errcount, verbose ? "\n===========================================================\n" : "");
         offset = asar_errcount;
     }
     std::ofstream(tool_folder+"asm/ssr.asm").write(routine_macro.c_str(), routine_macro.size());
@@ -453,7 +465,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
     meOWmeOW::meowmeow meowmeow { ow_rev };
     if(run_meowmeow)
         if(!meowmeow.init_meowmeow(rom))
-            std::exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
+            exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
 
     // Sprites
     int sprite_count = 0;
@@ -464,7 +476,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
         map16.open_sscov(std::string(rom_name+".sscov").c_str());
     }
     if(verbose)
-        std::println("===========================================================");
+        fmt::println("===========================================================");
     for(std::string sprite; std::getline(list, sprite);)
     {
         try
@@ -479,7 +491,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             std::string sprite_filename(sprite.substr(sprite.find_first_not_of("\t ", pos)));
             cleanup_str(&sprite_filename);
             if(!sprite_filename.ends_with(".asm") && !sprite_filename.ends_with(".asm\""))
-                std::exit(error("Unknown extension for sprite {}. (Remember the list file looks for the .asm file, NOT the .json tooltip!)", sprite_filename));
+                exit(error("Unknown extension for sprite {}. (Remember the list file looks for the .asm file, NOT the .json tooltip!)", sprite_filename));
             std::string sprite_labelname(sprite_filename.substr(0, sprite_filename.find_first_of("."))+"_"+std::to_string(sprite_number));
 
             if(!ow_rev && (ow_init_ptrs[2+(sprite_number-1)*3]<<16 | ow_init_ptrs[1+(sprite_number-1)*3]<<8 | ow_init_ptrs[(sprite_number-1)*3])!=0x048414 ) throw std::invalid_argument("");
@@ -487,7 +499,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
 
             std::ifstream curr_sprite(tool_folder+"sprites/"+sprite_filename);
             if(!curr_sprite)
-                std::exit(error("Could not open sprite with number {:0>2X} and filename {}. Make sure the sprite exists and is in the sprites directory.", sprite_number, sprite_filename));
+                exit(error("Could not open sprite with number {:0>2X} and filename {}. Make sure the sprite exists and is in the sprites directory.", sprite_number, sprite_filename));
             std::string insert_sprites(std::format("incsrc {0}_defines.asm\n\
 incsrc maxtile_defines.asm\n\
 incsrc ssr.asm\n\
@@ -502,18 +514,18 @@ namespace {1}\n\
     print \"    Extra bytes: \", dec(!extra)\n\
 namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\""+tool_folder+"sprites/"+sprite_filename+"\"")));
             if(!rom.inline_patch(tool_folder, insert_sprites.c_str()))
-                std::exit(error("Could not insert sprite {}. Details: {}\n", sprite_filename, asar::asar_geterrors(&asar_errcount)->fullerrdata));
+                exit(error("Could not insert sprite {}. Details: {}\n", sprite_filename, asar_geterrors(&asar_errcount)->fullerrdata));
             else
             {
                 bool init = true;
-                auto sprite_print = asar::asar_getprints(&asar_errcount);
+                auto sprite_print = asar_getprints(&asar_errcount);
                 std::size_t pos {};
                 for(int i=0;i<asar_errcount;++i)
                 {
                         std::string sprite_addr(sprite_print[i]);
                         if(verbose)
-                            std::println("{}", sprite_addr);
-                        if(sprite_addr.contains('$'))
+                            fmt::println("{}", sprite_addr);
+                        if(sprite_addr.find('$')!=std::string::npos)
                         {
                             sprite_addr = std::string(sprite_addr.begin()+sprite_addr.find_first_of("$")+1, sprite_addr.end());
                             if(init)
@@ -531,7 +543,7 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
                                 ow_main_ptrs[0+(sprite_number-1)*3] = std::stoi(std::string(sprite_addr.begin()+4,sprite_addr.begin()+6), &pos, 16);
                             }
                         }
-                        else if(sprite_addr.contains("Extra bytes:"))
+                        else if(sprite_addr.find("Extra bytes:")!=std::string::npos)
                         {
                             sprite_addr = std::string(sprite_addr.begin()+sprite_addr.find_first_of(":")+2, sprite_addr.end());
                             try
@@ -542,11 +554,11 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
                             }
                             catch(std::invalid_argument const & err)
                             {
-                                std::exit(error("Error parsing the extra bytes for {}: could not parse extra byte define\n  {}\nMake sure the define is a number between 0 and 8.\n", sprite_filename, sprite_addr));
+                                exit(error("Error parsing the extra bytes for {}: could not parse extra byte define\n  {}\nMake sure the define is a number between 0 and 8.\n", sprite_filename, sprite_addr));
                             }
                             catch(std::out_of_range const & err)
                             {
-                                std::exit(error("Error parsing the extra bytes for {}: invalid amount of extra bytes\n  {}\n", sprite_filename, sprite_addr));
+                                exit(error("Error parsing the extra bytes for {}: invalid amount of extra bytes\n  {}\n", sprite_filename, sprite_addr));
                             }
                         }
                 }
@@ -561,35 +573,35 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
                     rapidjson::BasicIStreamWrapper isw(ifs);
                     std::string e;
                     if(verbose)
-                        std::println("Parsing tooltip information for {}...", sprite_filename);
+                        fmt::println("Parsing tooltip information for {}...", sprite_filename);
                     sprite_tooltip.ParseStream(isw);
                     if(sprite_tooltip.HasParseError())
-                        std::exit(error("A problem occurred while parsing {}. Please ensure the file isn't corrupted and has a valid JSON format.", sprite_tooltip_path));
+                        exit(error("A problem occurred while parsing {}. Please ensure the file isn't corrupted and has a valid JSON format.", sprite_tooltip_path));
                     if(!map16.deserialize_json(&sprite_tooltip, &e))
-                        std::exit(error("A problem occurred while parsing specific tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
+                        exit(error("A problem occurred while parsing specific tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
                     e = "";
                     if(!map16.write_tooltip(sprite_number, &e))
-                        std::exit(error("A problem has ocurred while generating tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
+                        exit(error("A problem has ocurred while generating tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
                     else if(verbose)
-                        std::println("Done.");
+                        fmt::println("Done.");
                 }
                 else if(verbose)
-                    std::println("{} has no tooltip information.", sprite_filename);
+                    fmt::println("{} has no tooltip information.", sprite_filename);
             }
             if(verbose)
-                std::println("-----------------------------------------------------------");
+                fmt::println("-----------------------------------------------------------");
             ++sprite_count;
         }
         catch(std::invalid_argument const & err)
         {
-            std::exit(error("Error parsing the list file: duplicate sprite number\n  {}\n", sprite));
+            exit(error("Error parsing the list file: duplicate sprite number\n  {}\n", sprite));
         }
         catch(std::out_of_range const & err)
         {
-            std::exit(error("Error parsing the list file: incorrect sprite number\n  {}\n", sprite));
+            exit(error("Error parsing the list file: incorrect sprite number\n  {}\n", sprite));
         }
     }
-    std::println("{} sprites inserted.\n{}", sprite_count, verbose ? "===========================================================" : "");
+    fmt::println("{} sprites inserted.\n{}", sprite_count, verbose ? "===========================================================" : "");
     std::ofstream(tool_folder+"asm/init_ptrs.bin", ios::binary).write((char *)ow_init_ptrs, 0x7E*3);
     std::ofstream(tool_folder+"asm/main_ptrs.bin", ios::binary).write((char *)ow_main_ptrs, 0x7E*3);
     std::ofstream(tool_folder+"asm/extra_size.bin", ios::binary).write(rom.new_extra_bytes, 0x7F);
@@ -605,34 +617,34 @@ ow_sprite_main_ptrs:\n\
     {
         if(verbose)
         {
-            auto system_prints = asar::asar_getprints(&asar_errcount);
+            auto system_prints = asar_getprints(&asar_errcount);
             for(int i=0;i<asar_errcount;++i)
-                std::println("Captured print while inserting the sprite system: {}", system_prints[i]);
+                fmt::println("Captured print while inserting the sprite system: {}", system_prints[i]);
         }
-        std::exit(error("Something went wrong while applying the sprite system. Details:\n  {}", asar::asar_geterrors(&asar_errcount)->fullerrdata));
+        exit(error("Something went wrong while applying the sprite system. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
     }
 
     // meOWmeOW, if asked
     if(run_meowmeow)
     {
-        std::vector<std::uint8_t> new_sprite_data;
+        std::vector<uint8_t> new_sprite_data;
         if(!meowmeow.execute_meowmeow(rom, tool_folder, new_sprite_data))
-            std::exit(error("Something went wrong while applying meOWmeOW. Details:\n  {}", asar::asar_geterrors(&asar_errcount)->fullerrdata));
+            exit(error("Something went wrong while applying meOWmeOW. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
     }
         
     // Done
-    std::println("All sprites inserted successfully!\nRemember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
+    fmt::println("All sprites inserted successfully!\nRemember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
     map16.done(std::string(rom_name+".s16ov").c_str());
     rom.done(run_meowmeow);
     if(!cleanup(tool_folder))
-        std::exit(error("Error cleaning up temporary files. Exiting... (Your ROM was still saved anyway)"));
+        exit(error("Error cleaning up temporary files. Exiting... (Your ROM was still saved anyway)"));
     #if defined(_WIN32)
         std::system("pause");
     #else
         printf("Press Enter to continue");
         getchar();
     #endif
-    std::exit(0);
+    exit(0);
 }
 
 // cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" /reference "meowmeow=src/meowmeow.ifc" src/bowsie.cpp src/include/misc.cpp src/include/map16.cpp src/include/rom.cpp src/include/settings.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res

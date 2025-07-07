@@ -2,20 +2,21 @@
  *  meOWmeOW
  *  (c) 2025 Erik "Arinsu" Rios - eselerik@outlook.com
 */
+#pragma once
 
-module;
+
+#include <iostream>
+#include <vector>
+
+#include <cstdint>
+
+#include <fmt/base.h>
+
+#include "../asar/asar.h"
 
 #include "../misc.h"
 #include "../rom.h"
 #include "../settings.h"
-
-export module meowmeow;
-
-#pragma warning(push)
-#pragma warning(disable: 5244)
-
-import asar;
-import std;
 
 using ios = std::ios;
 using uint8_t = std::uint8_t;
@@ -42,7 +43,7 @@ namespace meOWmeOW
         struct meowmeow: detect and correct extra byte changes
         ---
     */
-    export struct meowmeow
+    struct meowmeow
     {
         public:
             bool ow_rev;
@@ -61,8 +62,8 @@ namespace meOWmeOW
                 // Verify if there is an extra byte table already in ROM.
                 rom.old_extra_bytes = new char[0x80] { 0x03 };
 
-                const int extra_byte_loc = ow_rev ? asar::snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE+EXTRA_BIT_OFFSET\
-                                                : asar::snestopc_pick(rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE;
+                const int extra_byte_loc = ow_rev ? snestopc_pick(rom.mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE+EXTRA_BIT_OFFSET\
+                                                : snestopc_pick(rom.mapper, rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE;
                 const bool extra_bytes_enabled = ow_rev ? rom.read<1>(LVL_SPRITE_EXTRA_BYTES_PTR+3) == 0x42\
                                                         : rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR+3) == 0x42;
 
@@ -112,7 +113,7 @@ namespace meOWmeOW
 
                 if(run_meowmeow)
                 {
-                    std::println("Extra byte changes detected. Running meOWmeOW to align data.");
+                    fmt::println("Extra byte changes detected. Running meOWmeOW to align data.");
                     return ow_rev ? exec_meowmeow_lvl(rom, tool_folder, new_sprite_data) : exec_meowmeow_ow(rom, tool_folder, new_sprite_data);
                 }
                 return true;
@@ -123,7 +124,7 @@ namespace meOWmeOW
             {
                 char* old_level_extra_bytes = new char[0x400] {};
                 rom.rom_data.clear();
-                rom.rom_data.seekg(asar::snestopc_pick(rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE);
+                rom.rom_data.seekg(snestopc_pick(rom.mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true))+HEADER_SIZE);
                 rom.rom_data.read(old_level_extra_bytes, 0x400);
 
                 const int first_map = rom.read<2>(OWREV_FIRST_MAP_LVL, true);
@@ -136,8 +137,8 @@ namespace meOWmeOW
                     int curr_map = first_map+submaps_processed;
                     // Prepare ROM data by putting the needle in the first map's data.
                     rom.rom_data.clear();
-                    rom.rom_data.seekg(asar::snestopc_pick( (rom.read<2>(LVL_SPRITE_DATA_PTR+(curr_map*2), true))|\
-                                                            (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK+curr_map)<<16) )+HEADER_SIZE);
+                    rom.rom_data.seekg(snestopc_pick(rom.mapper, (rom.read<2>(LVL_SPRITE_DATA_PTR+(curr_map*2), true))|\
+                                                                 (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK+curr_map)<<16) )+HEADER_SIZE);
 
                     // Sprite header - see https://smwspeedruns.com/Level_Data_Format#Sprite_Header
                     uint8_t sprite_header = rom.rom_data.get();
@@ -264,7 +265,7 @@ new_sprite_data:\n\
 
                 // Prepare ROM data by putting the needle in the first map's data.
                 rom.rom_data.clear();
-                rom.rom_data.seekg(asar::snestopc_pick(ow_sprite_data+submap_offset[0])+HEADER_SIZE);
+                rom.rom_data.seekg(snestopc_pick(rom.mapper, ow_sprite_data+submap_offset[0])+HEADER_SIZE);
                 while(1)
                 {
                     // These two are always present: they define a sprite number and its position.
@@ -283,7 +284,7 @@ new_sprite_data:\n\
 
                         // Move to next map's sprite data.
                         rom.rom_data.clear();
-                        rom.rom_data.seekg(asar::snestopc_pick(ow_sprite_data+submap_offset[submaps_processed])+HEADER_SIZE);
+                        rom.rom_data.seekg(snestopc_pick(rom.mapper, ow_sprite_data+submap_offset[submaps_processed])+HEADER_SIZE);
 
                         // Store the new offset for new map and move on.
                         // The very first map (Main Map in LM) will *always* be 0x000E -- notice this is OW_SUBMAPS*2.
@@ -363,8 +364,4 @@ new_sprite_data:\n\
     };
 
 }
-
-export using meOWmeOW::meowmeow;
-
-#pragma warning(pop)
 
