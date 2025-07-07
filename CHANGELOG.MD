@@ -61,6 +61,10 @@ ___Contiguous table/Katrina's sprite system___
 - This system has been "unofficialized". BOWSIE still ships with `katrina`, but now you have to set the `custom_method_name` setting to `katrina` to use it.
 
 ___BOWSIE___
+- The codebase of BOWSIE suffered several changes.
+  - BOWSIE now includes CMake lists: from now on, all releases will be built using CMake with Clang as the default compiler and Ninja as the generator. Check the readme for more details.
+  - The main branch of BOWSIE can now be compiled with C++20. A branch planned for the future still uses modules.
+- For extra organization, you can now insert sprites in subfolders, as well sprites with spaces in their filenames.
 - You can now pass BOWSIE settings as arguments to the program directly, in case you don't wish to use `bowsie-config.json`. Run `bowsie -h` for more info.
 - When not choosing a custom method, BOWSIE now selects the adequate insertion method to use.
 - In addition to the two points above, BOWSIE now comes bundled with default settings. These are:
@@ -71,7 +75,6 @@ ___BOWSIE___
   - MaxTile enabled.
 - Added support for 6 and 8MB SA-1 ROMs.
 - BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
-- BOWSIE now includes CMake lists: from now on, all releases will be built using CMake with Clang as the default compiler and Ninja as the generator. Check the readme for more details.
 
 ___Deprecated features___
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.

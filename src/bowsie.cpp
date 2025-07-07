@@ -492,7 +492,16 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             cleanup_str(&sprite_filename);
             if(!sprite_filename.ends_with(".asm") && !sprite_filename.ends_with(".asm\""))
                 exit(error("Unknown extension for sprite {}. (Remember the list file looks for the .asm file, NOT the .json tooltip!)", sprite_filename));
+
             std::string sprite_labelname(sprite_filename.substr(0, sprite_filename.find_first_of("."))+"_"+std::to_string(sprite_number));
+            cleanup_str(&sprite_labelname);
+
+            auto clean_it = std::remove(sprite_labelname.begin(), sprite_labelname.end(), '\\');
+            sprite_labelname.erase(clean_it, sprite_labelname.end());
+            clean_it = std::remove(sprite_labelname.begin(), sprite_labelname.end(), '/');
+            sprite_labelname.erase(clean_it, sprite_labelname.end());
+            clean_it = std::remove(sprite_labelname.begin(), sprite_labelname.end(), ' ');
+            sprite_labelname.erase(clean_it, sprite_labelname.end());
 
             if(!ow_rev && (ow_init_ptrs[2+(sprite_number-1)*3]<<16 | ow_init_ptrs[1+(sprite_number-1)*3]<<8 | ow_init_ptrs[(sprite_number-1)*3])!=0x048414 ) throw std::invalid_argument("");
             if(ow_rev && (ow_init_ptrs[2+(sprite_number-1)*3]<<16 | ow_init_ptrs[1+(sprite_number-1)*3]<<8 | ow_init_ptrs[(sprite_number-1)*3])!=0x04FFFF ) throw std::invalid_argument("");
