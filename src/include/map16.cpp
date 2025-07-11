@@ -16,7 +16,7 @@ using ios = std::ios;
     * true if Map16 tooltip information was parsed correctly, false if not.
     * err_str now contains any issues found
 */
-bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
+bool Map16::deserialize_json(nlohmann::json& json, std::string* err_str)
 {
     bool status = true;
     static const char * keys[] = {"tooltip", "no_tiles"};
@@ -24,7 +24,7 @@ bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
     *err_str = "Couldn't find key(s):\t\t\t\t";
     for(const char * key : keys)
     {
-        if(!(*json).HasMember(key))
+        if(!json.contains(key))
         {
             (*err_str).append(key).append(", ");
             status = false;
@@ -33,20 +33,20 @@ bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
     (*err_str) = status ? "" : (*err_str).erase((*err_str).size()-2, 2).append("\n");
 
     // There's gotta be a better way to do this shit
-    if(!(*json)["tooltip"].IsString())
+    if(!json["tooltip"].is_string())
     {
         (*err_str).append("Incorrect data type for tooltip:\t\texpected String\n");
         status = false;
     }
     else
-        this->tooltip = (*json)["tooltip"].GetString();
-    if(!(*json)["no_tiles"].IsInt())
+        this->tooltip = json["tooltip"].get<std::string>();
+    if(!json["no_tiles"].is_number_integer())
     {
         (*err_str).append("Incorrect data type for no_tiles:\t\texpected Integer\n");
         status = false;
     }
     else
-        this->no_tiles = (*json)["no_tiles"].GetInt();
+        this->no_tiles = json["no_tiles"].get<int>();
         
     if(no_tiles < 0)
     {
@@ -59,13 +59,13 @@ bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
     {
         std::string c = std::format("tile_{}", i);
         const char * curr = c.c_str();
-        if(!(*json).HasMember(curr))
+        if(!json.contains(curr))
         {
             (*err_str).append(curr).append(", ");
             status = false;
             break;
         }
-        else if(!(*json)[curr].IsObject())
+        else if(!json[curr].is_object())
         {
             (*err_str).append(std::format("\n{} is not a tile (so a JSON structure)\n", curr));
             status = false;
@@ -76,7 +76,7 @@ bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
 
         for(const char * key : tile_keys)
         {
-            if(!(*json)[curr].HasMember(key))
+            if(!json[curr].contains(key))
             {
                 (*err_str).append(key).append(", ");
                 status = false;
@@ -86,69 +86,69 @@ bool Map16::deserialize_json(rapidjson::Document* json, std::string* err_str)
             break;
 
         (*err_str) = "";
-        if(!(*json)[curr]["is_16x16"].IsBool())
+        if(!json[curr]["is_16x16"].is_boolean())
         {
             (*err_str).append("Incorrect data type for is_16x16:\t\texpected Boolean\n");
             status = false;
         }
         else
-            this->is_16x16.push_back((*json)[curr]["is_16x16"].GetBool());
-        if(!(*json)[curr]["tile_num"].IsInt())
+            this->is_16x16.push_back(json[curr]["is_16x16"].get<bool>());
+        if(!json[curr]["tile_num"].is_number_integer())
         {
             (*err_str).append("Incorrect data type for tile_num:\t\texpected Integer\n");
             status = false;
         }
         else
-            this->tile_num.push_back((*json)[curr]["tile_num"].GetInt());
-        if(!(*json)[curr]["x_offset"].IsInt())
+            this->tile_num.push_back(json[curr]["tile_num"].get<int>());
+        if(!json[curr]["x_offset"].is_number_integer())
         {
             (*err_str).append("Incorrect data type for x_offset:\t\texpected Integer\n");
             status = false;
         }
         else
-            this->x_offset.push_back((*json)[curr]["x_offset"].GetInt());
-        if(!(*json)[curr]["y_offset"].IsInt())
+            this->x_offset.push_back(json[curr]["x_offset"].get<int>());
+        if(!json[curr]["y_offset"].is_number_integer())
         {
             (*err_str).append("Incorrect data type for y_offset:\t\texpected Integer\n");
             status = false;
         }
         else
-            this->y_offset.push_back((*json)[curr]["y_offset"].GetInt());
-        if(!(*json)[curr]["y_flip"].IsBool())
+            this->y_offset.push_back(json[curr]["y_offset"].get<int>());
+        if(!json[curr]["y_flip"].is_boolean())
         {
             (*err_str).append("Incorrect data type for y_flip:\t\texpected Boolean\n");
             status = false;
         }
         else
-            this->y_flip.push_back((*json)[curr]["y_flip"].GetBool());
-        if(!(*json)[curr]["x_flip"].IsBool())
+            this->y_flip.push_back(json[curr]["y_flip"].get<bool>());
+        if(!json[curr]["x_flip"].is_boolean())
         {
             (*err_str).append("Incorrect data type for x_flip:\t\texpected Boolean\n");
             status = false;
         }
         else
-            this->x_flip.push_back((*json)[curr]["x_flip"].GetBool());
-        if(!(*json)[curr]["priority"].IsInt())
+            this->x_flip.push_back(json[curr]["x_flip"].get<bool>());
+        if(!json[curr]["priority"].is_number_integer())
         {
             (*err_str).append("Incorrect data type for priority:\t\texpected Integer\n");
             status = false;
         }
         else
-            this->priority.push_back((*json)[curr]["priority"].GetInt());
-        if(!(*json)[curr]["palette"].IsInt())
+            this->priority.push_back(json[curr]["priority"].get<int>());
+        if(!json[curr]["palette"].is_number_integer())
         {
             (*err_str).append("Incorrect data type for palette:\t\texpected Integer\n");
             status = false;
         }
         else
-            this->palette.push_back((*json)[curr]["palette"].GetInt());
-        if(!(*json)[curr]["second_page"].IsBool())
+            this->palette.push_back(json[curr]["palette"].get<int>());
+        if(!json[curr]["second_page"].is_boolean())
         {
             (*err_str).append("Incorrect data type for second_page:\t\texpected Boolean\n");
             status = false;
         }
         else
-            this->second_page.push_back((*json)[curr]["second_page"].GetBool());
+            this->second_page.push_back(json[curr]["second_page"].get<bool>());
     }
 
     return status;

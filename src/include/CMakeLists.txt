@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 
 include(FetchContent)
 
@@ -22,6 +22,9 @@ FetchContent_Declare(
   SOURCE_SUBDIR src
 )
 FetchContent_MakeAvailable(asar)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_MakeAvailable(json)
 
 set_target_properties(${ASAR_TARGET} PROPERTIES CXX_STANDARD 14)
     
