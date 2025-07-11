@@ -2,7 +2,7 @@ includeonce
 
 if !sa1
     ;   Labels for SA-1's MaxTile
-    maxtile_get_slot    = $0084B0|!bank
+    maxtile_get_slot                = $0084B0|!bank
 
     ;   Memory definitions for SA-1's MaxTile
     !maxtile_oam_buffer_index_1    #= $3100
@@ -36,7 +36,7 @@ if !sa1
 
 elseif !bowsie_owrev
     ;   Labels for yoshifanatic's MaxTile
-    maxtile_get_slot    = $048162|!bank
+    maxtile_get_slot                = $048162|!bank
 
     ;   Memory definitions for yoshifanatic's MaxTile
     !maxtile_oam_buffer_index_1    #= $0B01
@@ -77,7 +77,7 @@ else
 
         !maxtile_opse   = 0
     if read1($04862E) == $AD
-        warn "MaxTile detected OPSE. The patch won't touch any player related GFX."
+        print "MaxTile detected OPSE. The patch won't touch any player related GFX."
         print "Please ask the maintainer to add MaxTile support."
         print "Proceed under your own risk!"
 
@@ -85,7 +85,7 @@ else
     endif
 
     ;   Labels
-    maxtile_get_slot    = $04F8A6|!bank
+    maxtile_get_slot                = $04F8A6|!bank
 
     ;   Memory definitions for BOWSIE's MaxTile
     ;   Follows SA-1 conventions: 0 is highest priority, 3 is lowest.

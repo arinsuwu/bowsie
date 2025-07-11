@@ -338,6 +338,82 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
     ;-
 
+    ; Level reveal sparkle and castle destruction tiles
+    draw_level_reveal_castle_destruction_maxtile:
+        REP #$30
+        LDY #$0004
+        LDA #$0002
+        JSL maxtile_get_slot_main
+        BCC .no_slots
+
+    .slots_gotten
+        LDY !maxtile_oam_buffer_index_1
+        SEP #$20
+
+        PEA.w (bank(draw_level_reveal_castle_destruction)<<8)|(bank(!maxtile_oam_buffer))
+        PLB
+
+        LDA #$03
+        STA $03
+
+        JMP.w draw_level_reveal_castle_destruction_draw_loop
+
+    .no_slots
+        SEP #$30
+        RTS
+
+    draw_level_reveal_castle_destruction_finish_drawing:
+        PLB
+
+        LDX !maxtile_oam_buffer_index_2
+        LDA #$00
+        STA.l oam_tilesize_buffer[$00].tile_sx,x
+        STA.l oam_tilesize_buffer[$01].tile_sx,x
+        STA.l oam_tilesize_buffer[$02].tile_sx,x
+        STA.l oam_tilesize_buffer[$03].tile_sx,x
+
+        SEP #$10
+        RTS
+
+    ; Switch palace block
+    draw_switch_block_tile_prepare:
+        LDA $13D2|!addr
+        STA $0E
+        RTS
+
+    draw_switch_block_tile_maxtile:
+        STX $0F
+        REP #$30
+        PHA
+        LDY #$0001
+        LDA #$0003
+        JSL maxtile_get_slot_main
+        BCC .no_slots
+
+    .slot_gotten
+        PLA
+        LDY !maxtile_oam_buffer_index_1
+        SEP #$20
+
+        PEA.w (bank(draw_level_reveal_castle_destruction)<<8)|(bank(!maxtile_oam_buffer))
+        PLB
+
+        XBA
+        JMP.w draw_switch_block_tile_do_draw
+
+    .no_slots
+        PLA
+        SEP #$30
+        RTS
+
+    draw_switch_block_tile_finish_drawing:
+        PLB
+        LDX !maxtile_oam_buffer_index_2
+
+        JMP.w draw_switch_block_tile_write_size
+
+    ;-
+
     if not(!maxtile_opse)
         ; Player, no Yoshi
         draw_player_not_riding_yoshi_maxtile:
@@ -514,6 +590,74 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
             JMP.w .finish_drawing
             NOP #3
         .dont_draw
+
+        ; Level reveal sparkle and castle destruction tiles
+        org $04EC2E|!bank
+        draw_level_reveal_castle_destruction:
+            JMP.w .maxtile
+        .draw_loop
+            LDA $00
+            CLC
+            ADC.l $04EB56,x
+            STA.w oam_buffer[$00].x_pos,y
+            LDA $01
+            CLC
+            ADC.l $04EB82,x
+            STA.w oam_buffer[$00].y_pos,y
+            LDA $02
+            STA.w oam_buffer[$00].tile,y
+            LDA.l $04EBAE,x
+            STA.w oam_buffer[$00].props,y
+            INY #4
+            INX
+            DEC $03
+            BPL .draw_loop
+            JMP.w .finish_drawing
+
+        assert pc() <= $04EC67|!bank
+
+        ; Switch palace block
+        org $04F317|!bank
+            JSR.w draw_switch_block_tile_prepare
+            LDX #$00
+        draw_switch_block_tile_main_loop:
+            STX $0F
+
+        org $04F355|!bank
+        draw_switch_block_tile:
+            JMP.w .maxtile
+        ; This is bad, but we gotta respect the structure because LM hacks around here.
+        .do_draw
+            STA.w oam_buffer[$00].y_pos,y
+            skip 2
+            STA.w oam_buffer[$00].x_pos,y
+            skip 2
+            STA.w oam_buffer[$00].tile,y
+            NOP
+            LDA $0E
+            skip 1
+            skip 1
+            skip 2
+            STA.w oam_buffer[$00].props,y
+            JMP .finish_drawing
+        .write_size
+            LDA #$02
+            STA.l oam_tilesize_buffer[$00].tile_sx,x
+            SEP #$10
+            LDX $0F
+            BRA +
+
+        assert pc() <= $04F385|!bank
+        pad $04F385|!bank
+
+        org $04F385|!bank
+        +
+
+        ;   ts so ass vro :broken_heart:
+        org $04F389|!bank
+            BCC .main_loop
+        org $04F394|!bank
+            BCC .main_loop
 
         if not(!maxtile_opse)
             ; Player, draw order
