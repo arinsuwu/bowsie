@@ -69,7 +69,7 @@ namespace meOWmeOW {
             // Prepare ROM data by putting the needle in the first map's data.
             rom.rom_data.clear();
             rom.rom_data.seekg(snestopc_pick(rom.mapper, (rom.read<2>(LVL_SPRITE_DATA_PTR + (curr_map * 2), true)) | \
-                (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK + curr_map) << 16)) + HEADER_SIZE);
+                                                         (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK + curr_map) << 16)) + HEADER_SIZE);
 
             // Sprite header - see https://smwspeedruns.com/Level_Data_Format#Sprite_Header
             uint8_t sprite_header = rom.rom_data.get();
