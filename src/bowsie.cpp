@@ -269,7 +269,13 @@ int main(int argc, char *argv[])
     std::string tool_folder = fs::absolute(argv[0]).parent_path().string()+"/";
     std::string rom_name = fs::absolute(rom.rom_path).parent_path().string()+"/"+fs::path(rom.rom_path).stem().string();
 
-    std::string full_patch(std::format("incsrc \"{1}asm/{0}_defines.asm\"\nincsrc \"{1}asm/ssr.asm\"\nincsrc \"{1}asm/macro.asm\"\nincsrc \"{1}asm/maxtile_defines.asm\"\n\n", method, tool_folder));
+    std::string full_patch(std::format("incsrc \"{1}asm/{0}_defines.asm\"\n\
+incsrc \"{1}asm/ssr.asm\"\n\
+incsrc \"{1}asm/macro.asm\"\n\
+incsrc \"{1}asm/maxtile_defines.asm\"\n\
+org ${2:0>6X}\n\
+    dd ${3:0>8X}\n\
+    dl ow_sprite_init_ptrs\n\n", method, tool_folder, BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE));
     {
         std::string tmp;
         // Insert the method
@@ -293,7 +299,14 @@ int main(int argc, char *argv[])
         full_patch.append(tmp);
     }
 
+    // meOWmeOW
+    meOWmeOW::meowmeow meowmeow { ow_rev };
+    if(run_meowmeow)
+        if(!meowmeow.init_meowmeow(rom))
+            exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
+
     // Figure out whether the tool's been used and clean-up if so
+    // In theory this new code can also clean up the older one...
     if( (rom.read<2>(BOWSIE_USED_PTR)==(MAGIC_CONSTANT&0xFFFF0000)>>16) && (rom.read<2>(BOWSIE_USED_PTR+2)==(MAGIC_CONSTANT&0xFFFF)) )
     {
         if(verbose)
@@ -302,16 +315,19 @@ int main(int argc, char *argv[])
             exit(error("Error cleaning up existing Map16 files. Exiting..."));
 
         std::string clean_patch;
-        int clean_offset = 4;
-        while(1)
+        int old_sprite_ptrs = rom.read<3>(BOWSIE_USED_PTR+4, true);
+        for(int i=0; i<0x7E; ++i)
         {
-            if(rom.read<3>(BOWSIE_USED_PTR+clean_offset)==0x555555)
-            {
-                clean_patch.append(std::format("org ${:0>6X}\n    dl $FFFFFF\norg ${:0>6X}\n    dd $FFFFFFFF", BOWSIE_USED_PTR+clean_offset, BOWSIE_USED_PTR));
-                break;
-            }
-            clean_patch.append(std::format("autoclean read3(${0:0>6X})\norg ${0:0>6X}\n    dl $FFFFFF\n", BOWSIE_USED_PTR+clean_offset));
-            clean_offset+=3;
+            clean_patch.append(std::format("autoclean ${:0>6X}\nautoclean ${:0>6X}\n", rom.read<3>( old_sprite_ptrs+(i*3), true ),
+                                                                                                     rom.read<3>( old_sprite_ptrs+(i*3)+(0x7E*3), true ))
+                                           );
+        }
+        int i=0;
+        while(rom.read<3>(BOWSIE_USED_PTR+7+i)!=0xFFFFFF)
+        {
+            clean_patch.append(std::format("autoclean ${:0>6X}\norg ${:0>6X}\n    dl $FFFFFF\n", rom.read<3>(BOWSIE_USED_PTR+7+i, true),
+                                                                                               BOWSIE_USED_PTR+7+i));
+            i+=3;
         }
         if(ow_rev)
             if(rom.read<1>(OWREV_HANDLER_PTR)==0x20)
@@ -325,10 +341,7 @@ int main(int argc, char *argv[])
             exit(error("An error ocurred while cleaning up."));
         else if(verbose)
             fmt::println("Clean-up done.\n");
-
     }
-    else
-        rom.inline_patch(tool_folder, std::format("org ${:0>6X} : dd ${:0>8X}", BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE).c_str());
 
     // BOWSIE-specific defines
     std::string defines(std::format("\
@@ -418,7 +431,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             std::string routine_addr(routine_print[i]);
             routine_addr = std::string(routine_addr.begin()+routine_addr.find_first_of("$"), routine_addr.end());
             routine_macro.append(std::format("macro {}()\n    JSL {}\nendmacro\n\n", routine_names[i], routine_addr));
-            routine_content.append(std::format("org ${:0>6X}\n    dl {}\n", BOWSIE_USED_PTR+4+(i*3), routine_addr));
+            routine_content.append(std::format("org ${:0>6X}\n    dl {}\n", BOWSIE_USED_PTR+7+(i*3), routine_addr));
             if(verbose)
             {
                 fmt::println("{}", routine_print[i]);
@@ -459,11 +472,6 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
         }
         rom.new_extra_bytes[i] = 0x03;
     }
-
-    meOWmeOW::meowmeow meowmeow { ow_rev };
-    if(run_meowmeow)
-        if(!meowmeow.init_meowmeow(rom))
-            exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
 
     // Sprites
     int sprite_count = 0;
