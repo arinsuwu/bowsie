@@ -76,6 +76,8 @@ bool Rom::inline_patch(std::string tool_folder, const char * patch_content)
     std::string tmp_path = fs::absolute(tool_folder+"asm/tmp.asm").string();
     bool patch_res = asar_patch(tmp_path.c_str(), &(raw_rom_data[HEADER_SIZE]), MAX_SIZE, &new_size);
 
+    rom_size = new_size + HEADER_SIZE;
+
     if(patch_res)
         first_time = false;
     return patch_res;
