@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     // First we look for bowsie-config.json in the ROM path
     // if not there, we look in the root folder
     {
-        std::string tmp(fs::relative(rom.rom_path).string());
+        std::string tmp(fs::absolute(rom.rom_path).string());
         #ifdef _WIN32
             std::string settings_path(tmp.begin(), tmp.begin()+tmp.find_last_of("\\")+1);
         #else
@@ -159,8 +159,12 @@ int main(int argc, char *argv[])
         std::ifstream ifs(settings_path);
         if(!ifs)
         {
-            tmp = argv[0];
-            settings_path = tmp.append("/../bowsie-config.json");
+            tmp = fs::absolute(argv[0]).string();
+            #ifdef _WIN32
+                settings_path = std::string(tmp.begin(), tmp.begin()+tmp.find_last_of("\\")+1);
+            #else
+                settings_path = std::string(tmp.begin(), tmp.begin()+tmp.find_last_of("/")+1);
+            #endif
 
             ifs = std::ifstream(settings_path);
             if(!(!ifs))
@@ -176,7 +180,6 @@ int main(int argc, char *argv[])
                 fmt::println("WARNING: bowsie-config.json exists but CLI settings were also passed. The CLI settings will be ignored.");
             process_json = true;
         }
-
         if(process_json)
         {
 			settings_json = nlohmann::json::parse(ifs, nullptr, false);

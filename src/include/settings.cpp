@@ -16,7 +16,7 @@ namespace ranges = std::ranges;
 bool deserialize_json(nlohmann::json& json, std::map<std::string, std::variant<bool, int, std::string>>& bowsie_settings, std::string* err_str)
 {
     bool status = true;
-    *err_str = "Couldn't find key(s):\t\t\t\t";
+    *err_str = "Couldn't find key(s):\t";
     for(const char * key : json_keys)
     {
         if(!json.contains(key))
@@ -26,31 +26,37 @@ bool deserialize_json(nlohmann::json& json, std::map<std::string, std::variant<b
         }
     }
     (*err_str) = status ? "" : (*err_str).erase((*err_str).size()-2, 2).append("\n");
+    // if( !status ) return status;    // Crashes otherwise
 
-    for(const char * key : bool_keys)
+    try
     {
-        if(!json[key].is_boolean())
+        for(const char * key : bool_keys)
         {
-            (*err_str).append(std::format("Incorrect data type for {}:\t\texpected Boolean\n", key));
+            if(!json[key].is_boolean())
+            {
+                (*err_str).append(std::format("Incorrect data type for {}:\t\texpected Boolean\n", key));
+                status = false;
+            }
+            else
+                bowsie_settings[key] = json[key].get<bool>();
+        }
+        if(!json["slots"].is_number_unsigned())
+        {
+            (*err_str).append("Incorrect data type for slots:\t\t\texpected Number (Unsigned Integer)\n");
             status = false;
         }
         else
-            bowsie_settings[key] = json[key].get<bool>();
+            bowsie_settings["slots"] = json["slots"].get<int>();
+
+        if(!( json["custom_method_name"].is_null() || json["custom_method_name"].is_string()))
+        {
+            (*err_str).append("Incorrect data type for custom_method_name:\t\texpected Null or String\n");
+            status = false;
+        }
+        else
+            bowsie_settings["custom_method_name"] = json.value("custom_method_name", "");
     }
-    if(!json["slots"].is_number_unsigned())
-    {
-        (*err_str).append("Incorrect data type for slots:\t\t\texpected Number (Unsigned Integer)\n");
-        status = false;
-    }
-    else
-        bowsie_settings["slots"] = json["slots"].get<int>();
-    if(!( json["custom_method_name"].is_null() || json["custom_method_name"].is_string()))
-    {
-        (*err_str).append("Incorrect data type for custom_method_name:\t\texpected Null or String\n");
-        status = false;
-    }
-    else
-        bowsie_settings["custom_method_name"] = json.value("custom_method_name", "");
+    catch(...) {}
 
     return status;
 }
