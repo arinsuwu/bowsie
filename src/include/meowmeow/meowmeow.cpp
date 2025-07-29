@@ -35,12 +35,15 @@ namespace meOWmeOW {
     bool meowmeow::execute_meowmeow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data) {
         // Verify whether we need meOWmeOW, by any extra byte changes
         bool run_meowmeow = false;
-        for (int i = 0; i < 0x7F; ++i)
+        if (ow_rev || rom.read<3>(OW_SPRITE_DATA_PTR) != 0xFFFFFF)
         {
-            if (rom.old_extra_bytes[i + 1] != rom.new_extra_bytes[i])
+            for (int i = 0; i < 0x7F; ++i)
             {
-                run_meowmeow = true;
-                break;
+                if (rom.old_extra_bytes[i + 1] != rom.new_extra_bytes[i])
+                {
+                    run_meowmeow = true;
+                    break;
+                }
             }
         }
 
