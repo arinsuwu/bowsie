@@ -58,12 +58,8 @@ Obviously, a custom system would need to accound for where to run and where its 
 The way routines are inserted varies slightly with _PIXI_. _BOWSIE_ inserts every routine first, then creates the call macros which are simply a `JSL routine` instruction. What _PIXI_ does is put the routine inside a macro, _then_ give you the `JSL` when you call said macro. That's why _PIXI_ routines use macro labels and _BOWSIE_'s don't.
 
 ### The tool itself
-As I am a pretty nitpicky person, I decided to code _BOWSIE_ in the latest (as of 2024) C++ standard: that is, [C++23](https://en.wikipedia.org/wiki/C%2B%2B23). This tool makes heavy use of both [named modules](https://en.wikipedia.org/wiki/Precompiled_header#Modules) and the \<print\> header introduced in the standard (well, modules are C++20, but I mean...). As of 2025, really the only compiler with good support for both of these features happens to be the Microsoft Visual C++ (_MSVC_) compiler: I'm sure _GCC_ outright doesn't support either feature, and for all I tried I couldn't get _LLVM_ to compile the standard library.
-If you're interested in modifying and compiling the tool but are not familiar with this standard, I suggest checking up on the [documentation](https://learn.microsoft.com/en-us/cpp/cpp/tutorial-named-modules-cpp) to get up to speed. You can compile the tool by installing the latest MSVC version and running  
-```cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" /reference "meowmeow=src/meowmeow.ifc" src/bowsie.cpp src/include/misc.cpp src/include/map16.cpp src/include/rom.cpp src/include/settings.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res```  
-in the x86 Native Tools Command Prompt. This, of course, on Windows.  
-If you're wondering _why_ I chose to code the tool this way, well, it was to try something new. I wanted to code the tool in [Julia](https://julialang.org/), a high level programming language aimed at scientific computing which I used to implement the code I needed for my Bachelor of Sciences' thesis. In theory, Julia is able to compile to a native code executable; in practice, this results in distributing a program with like, 90 DLLs. I really dislike C++ and the only way I saw to motivate myself to do this was by challenging myself to learn the newest tricks of the standard.  
-If you believe the tool is poorly coded, that's because I'm not a programmer: I'm a mathematician who happens to like coding. That's how I got my job. Condescendence aside, if you see area for improvement, please submit a pull request with your improvements. Who knows, perhaps this ends up like the ship of Thesseus lmao
+Originally, I decided to code _BOWSIE_ in the latest (as of 2024) C++ standard: that is, [C++23](https://en.wikipedia.org/wiki/C%2B%2B23). This tool makes heavy use of both [named modules](https://en.wikipedia.org/wiki/Precompiled_header#Modules) and the \<print\> header introduced in the standard (well, modules are C++20, but I mean...). As of 2025, really the only compiler with good support for both of these features happens to be the Microsoft Visual C++ (_MSVC_) compiler: I'm sure _GCC_ outright doesn't support either feature, and for all I tried I couldn't get _LLVM_ to compile the standard library.
+Thanks to Atari2.0's help, BOWSIE now uses C++20 and compiles with GCC and Clang just as well.
 
 ## Common questions
 * __Q__: Why a separate sprite tool instead of _PIXI_ integration?  
@@ -90,3 +86,6 @@ If you believe the tool is poorly coded, that's because I'm not a programmer: I'
 * To yoshifanatic for all of his pointers and willingness to rearrange OW Revolution so _BOWSIE_ and said patch work seamlessly.
 * To GrenCaret/Green and Stivi, who contacted me during my hiatus to check on me. The former doing so encouraged me to return, especially because I didn't even know them yet they checked in on me. The latter asked me for the implementation of the older overworld sprites patch, and after chatting a bit with him, I got enough motivation to do this tool.
   * And of course you too Ringo/Mirann and Burning Loaf/Bench, but you already know that. 😉
+* Contributors:
+  * Atari2.0
+  * yoshifanatic

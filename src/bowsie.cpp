@@ -3,22 +3,23 @@
  * ---
  * BOWSIE's C++ code is (c) 2024-25 Erik Rios (aka Arinsu)
  * licensed under the BSD 2-clause license
+ * additional contributions by Atari2.0
  * 
  * 65816 ASM code is due to various authors:
- * - vldc9.asm and its routines originally by Lui37, Medic et al. in 2016
- *   modifications done by JackTheSpades in 2018 and Erik in 2018, 2024-25
+ * - vldc9.asm and its routines originally by Lui, Medic et al. in 2016
+ *   modifications done by JackTheSpades in 2018 and Arinsu in 2018, 2024-25
  * - katrina.asm originally by Katrina in 2018 building upon vldc9.asm
- *   modifications done by Erik in 2024-25
- * - owrev.asm originally by Erik in 2024-25
+ *   modifications done by Arinsu in 2024-25
+ * - owrev.asm originally by Arinsu in 2024-25
  *   with some code and pointers by yoshifanatic
  * - MaxTile is (c) 2020-21 Vitor Vilela
  *   LoROM OR variant by yoshifanatic in 2023
- *   BOWSIE LoROM implementation by Erik in 2025, builds upon the above two
- * - All other ASM code (eg. macros, non-VLDC routines) is by Erik
+ *   BOWSIE LoROM implementation by Arinsu in 2025, builds upon the above two
+ * - All other ASM code (eg. macros, non-VLDC routines) is by Arinsu
  * 
  * Asar is (c) 2011 Alcaro, RPG Hacker, trillian/randomdude999 et al.
- * rapidjson is (c) 2015 Tencent
- * meOWmeOW is (c) 2025 Erik, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
+ * JSON for Modern C++ is (c) 2013 Niels Lohmann et al.
+ * meOWmeOW is (c) 2025 Arinsu, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
 */
 
 #include <filesystem>
@@ -626,7 +627,7 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
     full_patch.append(std::format("\now_sprite_init_ptrs:\n\
     incbin init_ptrs.bin\n\
 ow_sprite_main_ptrs:\n\
-    incbin main_ptrs.bin", BOWSIE_USED_PTR+4+(offset*3)));
+    incbin main_ptrs.bin"));
     if(ow_rev)
         full_patch.append("\norg $04FFFF\n    RTL");
     if(!rom.inline_patch(tool_folder, full_patch.c_str()))
@@ -662,11 +663,3 @@ ow_sprite_main_ptrs:\n\
     #endif
     exit(0);
 }
-
-// cl /nologo /Febowsie /std:c++latest /EHsc /O2 /W2 /reference "std=src/std.ifc" /reference "rapidjson=src/rapidjson.ifc" /reference "asar=src/asar.ifc" /reference "meowmeow=src/meowmeow.ifc" src/bowsie.cpp src/include/misc.cpp src/include/map16.cpp src/include/rom.cpp src/include/settings.cpp src/std.obj src/rapidjson.obj src/asar.obj /link src/bowsie.res
-// rc /nologo bowsie.rc
-
-// for_each(rom_path.begin()+rom_path.size()-3,rom_path.end(),[](char &c){c = toupper(c);});
-
-// #define LOWERCASE(str) for_each(str.begin(),str.end(),[](char & c) \
-// { c = tolower(static_cast<unsigned char>(c));})

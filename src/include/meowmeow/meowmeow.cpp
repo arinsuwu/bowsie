@@ -1,5 +1,8 @@
+/*
+ *  meOWmeOW
+ *  (c) 2025 Erik "Arinsu" Rios - eselerik@outlook.com
+*/
 #include "meowmeow.h"
-
 
 namespace meOWmeOW {
 
