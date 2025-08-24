@@ -209,6 +209,7 @@ org $04F76E|!bank
 run_ow_sprite:
 ; Main handler
 .main
+
     REP #$21
     if not(!bowsie_maxtile)
         LDA #!oam_start
@@ -239,31 +240,52 @@ run_ow_sprite:
     ; So, we simply restore the PLB and either jump to MaxTile syncing the buffer or
     ; add the RTL directly.
     PLB
-    if !vldc9_maxtile
-        JML maxtile_sync_buffer
-    else
+    if !sa1
         RTL
+    else
+        if !vldc9_maxtile
+            JML maxtile_sync_buffer
+        else
+            RTL
+        endif
     endif
 
 .transition
+    if !sa1
+        LDA.b #..exec_sa1
+        STA $3180
+        LDA.b #..exec_sa1>>8
+        STA $3181
+        LDA.b #..exec_sa1>>16
+        STA $3182
+        JSR $1E80
+    return:
+        RTS
+    endif
+
+run_ow_sprite_transition_exec_sa1:
     PHB
     REP #$21
 
     LDX.b #!bowsie_ow_slots*2-2     ;\
 -   LDA !ow_sprite_num,x            ; |
-    BEQ ..no_sprite                 ; | Main loop.
+    BEQ .no_sprite                  ; | Main loop.
     JSR execute_ow_sprite_init      ; | Call execute_ow_sprite for all sprites where !ow_sprite_num,x is not zero.   
     INC !ow_sprite_init,x           ; |
     LDA !ow_sprite_num,x            ; |
     JSR execute_ow_sprite           ;/
-..no_sprite
+.no_sprite
     DEX #2
     BPL -
 
     SEP #$20
     PLB
-return:
-    RTS
+    if !sa1
+        RTL
+    else
+    return:
+        RTS
+    endif
 
 ;---
 
