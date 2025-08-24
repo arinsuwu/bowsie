@@ -4,22 +4,20 @@
     PHA
     SEP #$20
     JSL $01ACF9|!bank
-    REP #$20
 if !sa1
-    PHA
-    LDA #$0001      ; perform mod
+    LDA #$01      ; perform mod
     STA $2250
+    REP #$20
+    LDA $148D|!addr
+    LSR
+    STA $2251
     PLA
-    BPL +
-    EOR #$FFFF
     INC
-
-+   STA $2251
-    PLA
     STA $2253
-    LDA $00,x       ; waste 5 cycles
+    NOP
     LDA $2308
 else            ;   fuck sanity
+    REP #$20
     BPL +
     EOR #$FFFF
     INC
