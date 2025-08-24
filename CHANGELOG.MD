@@ -1,3 +1,14 @@
+BOWSIE v1.11
+---
+Of course I couldn't make an update without breaking a couple things LOL
+
+### Features
+- Made `%random_range()` more similar to PIXI's own `%Random()`.
+
+### Fixes
+- Fixed inversion bias in the position update routines, which existed since the VLDC9 days. Thanks go to Stivi for reporting this and Ice Man for helping me test!
+- BOWSIE did not invoke the SA-1 chip on sprite init, which was pretty noticeable when using routines which use SA-1's registers (eg. the VLDC9 Eerie which called `%random_range()`). Thanks to Ice Man for reporting this!
+
 BOWSIE v1.10
 ---
 ### Features
