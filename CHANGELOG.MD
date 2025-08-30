@@ -1,7 +1,7 @@
 BOWSIE v1.12
 ---
 ### Fixes
-- Fixed meOWmeOW not accounting for an uninitialized sprite data list of `0x000000` in addition to the `0xFFFFF` one. Thanks go to Stivi for reporting this!
+- Fixed meOWmeOW not accounting for an uninitialized sprite data list of `0x000000` in addition to the `0xFFFFFF` one. Thanks go to Stivi for reporting this!
 
 BOWSIE v1.11
 ---
