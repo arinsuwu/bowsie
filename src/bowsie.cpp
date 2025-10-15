@@ -45,7 +45,7 @@
 #include "include/settings.h"
 
 #define VERSION 1
-#define SUBVER 12
+#define SUBVER 13
 
 using ios = std::ios;
 
@@ -252,6 +252,7 @@ int main(int argc, char *argv[])
         exit(error("This ROM is clean. Please edit it in Lunar Magic."));
     if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
         exit(error("Title mismatch. Is this ROM headered?"));
+    const int lm_ver = 100*(rom.read<1>(0x0FF0B4)&0xF)+10*(rom.read<1>(0x0FF0B4+2)&0xF)+1*(rom.read<1>(0x0FF0B4+3)&0xF);
 
     if(verbose)
     {
@@ -262,9 +263,10 @@ int main(int argc, char *argv[])
         fmt::println("MaxTile:\t\t\t{}", use_maxtile ? "Enabled" : "Disabled");
         fmt::println("meOWmeOW:\t\t\t{}", run_meowmeow ? "Enabled" : "Disabled");
         fmt::println("RAM checks:\t\t\t{}", bypass_ram_check ? "Ignored (!)" : "Enabled");
-        fmt::println("Asar version: v{}.{}{}\n", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
+        fmt::println("Asar version: v{}.{}{}", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
                                                  (int)(((asar_version()%1000)-(asar_version()%10))/100),
                                                  (int)(asar_version()%10));
+        fmt::println("Lunar Magic version: {}.{}\n", (int)(lm_ver/100), lm_ver%100);
     }
     else
         fmt::println("");
@@ -304,7 +306,7 @@ org ${2:0>6X}\n\
     }
 
     // meOWmeOW
-    meOWmeOW::meowmeow meowmeow { ow_rev };
+    meOWmeOW::meowmeow meowmeow { ow_rev, lm_ver };
     if(run_meowmeow)
         if(!meowmeow.init_meowmeow(rom))
             exit(error("An error ocurred while initializing meOWmeOW. Aborting execution."));
@@ -354,6 +356,7 @@ org ${2:0>6X}\n\
 !bowsie_subversion = {}\n\n\
 !bowsie_contiguous = {}\n\n\
 !bowsie_maxtile = {}\n\n\
+!bowsie_lmver = {}\n\n\
 if read1($00FFD5) == $23\n\
     if read1($00FFD7) == $0D\n\
         fullsa1rom\n\
@@ -382,7 +385,7 @@ endif\n\n\
 optimize dp always\n\
 dpbase !dp\n\n\
 optimize address mirrors\n\
-bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxtile ? '1' : '0'));
+bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxtile ? '1' : '0', lm_ver));
 
     /*
         These loops locate where certain code is inserted by Overworld Revolution.

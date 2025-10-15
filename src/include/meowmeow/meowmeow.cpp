@@ -36,6 +36,10 @@ namespace meOWmeOW {
     }
 
     bool meowmeow::execute_meowmeow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data) {
+        // LM versions older than 3.51 don't need meOWmeOW
+        if(lm_ver < 351)
+            return false;
+
         // Verify whether we need meOWmeOW, by any extra byte changes
         bool run_meowmeow = false;
 
@@ -43,7 +47,8 @@ namespace meOWmeOW {
         {
             for (int i = 0; i < 0x7F; ++i)
             {
-                if (rom.old_extra_bytes[i + 1] != rom.new_extra_bytes[i])
+                bool lm351_offset = lm_ver < 360;
+                if (rom.old_extra_bytes[i + lm351_offset] != rom.new_extra_bytes[i])
                 {
                     run_meowmeow = true;
                     break;

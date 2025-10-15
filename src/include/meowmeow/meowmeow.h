@@ -47,6 +47,7 @@ namespace meOWmeOW
     {
         public:
             bool ow_rev;
+            int lm_ver;
 
             /*
                 init_meowmeow(Rom& rom) -> bool: initialize meOWmeOW

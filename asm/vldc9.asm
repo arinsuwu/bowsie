@@ -64,9 +64,11 @@ org $00A169         ;   sync OAM correctly in map transitions (or restore code)
 ; LM Flags
 
 ; Enable arbitrarily sized extra bytes
-org $0DE18C
-    autoclean dl extra_byte_table
-    db $42
+if !bowsie_lmver > 350
+    org $0DE18C
+        autoclean dl extra_byte_table
+        db $42
+endif
 
 ; Disable LM from writing to OW sprite area
 org $0FFFE0
@@ -403,8 +405,12 @@ assert pc() <= $04F882|!bank
 
 ;---
 
-freedata
-extra_byte_table:
-    db $03                      ;   sprite 00 (fixes lm bug)
-    incbin "extra_size.bin"
+if !bowsie_lmver > 350
+    freedata
+    extra_byte_table:
+        if !bowsie_lmver < 360
+            db $03              ;   sprite 00 (fixes lm 3.51 bug)
+        endif
+        incbin "extra_size.bin"
+endif
 
