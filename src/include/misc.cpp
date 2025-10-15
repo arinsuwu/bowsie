@@ -82,7 +82,11 @@ bool cleanup(std::string tool_folder)
         fs::remove(tool_folder+"asm/tmp.asm");
         fs::remove(tool_folder+"asm/bowsie_defines.asm");
         fs::remove(tool_folder+"asm/ssr.asm");
-        fs::remove(tool_folder+"asm/*.bin");
+        for(auto file : fs::directory_iterator(tool_folder+"asm/"))
+        {
+            if(file.path().extension() == ".bin")
+                fs::remove(file);
+        }
         return true;
     }
     catch(fs::filesystem_error const & err)
