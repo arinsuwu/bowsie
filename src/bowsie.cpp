@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 {
     fmt::println("BOWSIE - Better Overworld Sprite Insertion Engine");
     fmt::println("\t v{}.{:0>2}", VERSION, SUBVER);
-    fmt::println("\t By Erik\n");
+    fmt::println("\t By Arinsu\n");
 
     Rom rom;
 

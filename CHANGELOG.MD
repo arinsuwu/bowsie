@@ -1,6 +1,7 @@
 BOWSIE v1.13
 ---
 ### Fixes
+- Fixed temporary binary files not being erased.
 - Fixed BOWSIE and meOWmeOW not accounting for the differences in the extra byte table when using Lunar Magic 3.60 and newer.
 
 BOWSIE v1.12
