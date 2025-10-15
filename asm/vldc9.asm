@@ -137,12 +137,16 @@ custom_ow_sprite_load_main:
     PLY
     BCC .end_spawning           ;   return if no more slots where to spawn a sprite at
 
-    INY #2                      ;   move to the extra bytes
-    LDX $00                     ;\
-    LDA.l extra_byte_table,x    ; |
-    AND #$00FF                  ; | if there's no extra bytes (so only three bytes),
-    SBC #$0003                  ; | move on
-    CLC                         ; |
+    INY #2                      ;   move to the extra bytes - carry set becuase spawn succeeded
+    LDX $00
+    if !bowsie_lmver < 360
+        LDA.l extra_byte_table,x
+    else
+        LDA.l extra_byte_table-1,x
+    endif
+    AND #$00FF                  ;\
+    SBC #$0003                  ; | if there's no extra bytes (so only three bytes),
+    CLC                         ; | move on
     BEQ .sprite_load_loop       ;/
     CMP #$0005                  ;\  if there's more than 4 extra bytes,
     BCS .extra_byte_ptr         ;/  put a pointer instead
