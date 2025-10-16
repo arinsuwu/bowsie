@@ -74,8 +74,8 @@ namespace meOWmeOW
             bool execute_meowmeow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data);
 
         private:
-            bool exec_meowmeow_lvl(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data);
-            bool exec_meowmeow_ow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data);
+            bool exec_meowmeow_lvl(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data, bool);
+            bool exec_meowmeow_ow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data, bool);
     };
 
 }

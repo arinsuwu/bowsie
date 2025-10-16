@@ -20,7 +20,12 @@ bool Rom::open_rom()
     rom_size = rom_data.tellg();
     raw_rom_data = new char[MAX_SIZE] { 0x00 };
     first_time = true;
-    mapper = asar_getmapper();
+    if(rom_data.seekg(0x07FD5+HEADER_SIZE).get() == 0x23)
+        rom_mapper = (rom_data.seekg(0x07FD5+HEADER_SIZE).get() == 0x0D) ? bigsa1rom : sa1rom;
+    else
+        rom_mapper = lorom;
+
+    rom_data.seekg(HEADER_SIZE);
     return !(!rom_data);
 }
 

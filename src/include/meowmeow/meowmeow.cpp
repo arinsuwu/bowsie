@@ -10,8 +10,8 @@ namespace meOWmeOW {
         // Verify if there is an extra byte table already in ROM.
         rom.old_extra_bytes = new char[0x80] { 0x03 };
 
-        const int extra_byte_loc = ow_rev ? snestopc_pick(rom.mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE + EXTRA_BIT_OFFSET\
-            : snestopc_pick(rom.mapper, rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE;
+        const int extra_byte_loc = ow_rev ? snestopc_pick(rom.rom_mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE + EXTRA_BIT_OFFSET\
+            : snestopc_pick(rom.rom_mapper, rom.read<3>(OW_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE;
         const bool extra_bytes_enabled = ow_rev ? rom.read<1>(LVL_SPRITE_EXTRA_BYTES_PTR + 3) == 0x42\
             : rom.read<1>(OW_SPRITE_EXTRA_BYTES_PTR + 3) == 0x42;
 
@@ -42,12 +42,12 @@ namespace meOWmeOW {
 
         // Verify whether we need meOWmeOW, by any extra byte changes
         bool run_meowmeow = false;
+        bool lm351_offset = lm_ver < 360;
 
         if (ow_rev || !( rom.read<3>(OW_SPRITE_DATA_PTR) == 0xFFFFFF || rom.read<3>(OW_SPRITE_DATA_PTR) == 0x000000 ) )
         {
             for (int i = 0; i < 0x7F; ++i)
             {
-                bool lm351_offset = lm_ver < 360;
                 if (rom.old_extra_bytes[i + lm351_offset] != rom.new_extra_bytes[i])
                 {
                     run_meowmeow = true;
@@ -59,15 +59,15 @@ namespace meOWmeOW {
         if (run_meowmeow)
         {
             fmt::println("Extra byte changes detected. Running meOWmeOW to align data.");
-            return ow_rev ? exec_meowmeow_lvl(rom, tool_folder, new_sprite_data) : exec_meowmeow_ow(rom, tool_folder, new_sprite_data);
+            return ow_rev ? exec_meowmeow_lvl(rom, tool_folder, new_sprite_data, lm351_offset) : exec_meowmeow_ow(rom, tool_folder, new_sprite_data, lm351_offset);
         }
         return true;
     }
 
-    bool meowmeow::exec_meowmeow_lvl(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data) {
+    bool meowmeow::exec_meowmeow_lvl(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data, bool lm351_offset) {
         char* old_level_extra_bytes = new char[0x400] {};
         rom.rom_data.clear();
-        rom.rom_data.seekg(snestopc_pick(rom.mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE);
+        rom.rom_data.seekg(snestopc_pick(rom.rom_mapper, rom.read<3>(LVL_SPRITE_EXTRA_BYTES_PTR, true)) + HEADER_SIZE);
         rom.rom_data.read(old_level_extra_bytes, 0x400);
 
         const int first_map = rom.read<2>(OWREV_FIRST_MAP_LVL, true);
@@ -80,7 +80,7 @@ namespace meOWmeOW {
             int curr_map = first_map + submaps_processed;
             // Prepare ROM data by putting the needle in the first map's data.
             rom.rom_data.clear();
-            rom.rom_data.seekg(snestopc_pick(rom.mapper, (rom.read<2>(LVL_SPRITE_DATA_PTR + (curr_map * 2), true)) | \
+            rom.rom_data.seekg(snestopc_pick(rom.rom_mapper, (rom.read<2>(LVL_SPRITE_DATA_PTR + (curr_map * 2), true)) | \
                                                          (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK + curr_map) << 16)) + HEADER_SIZE);
 
             // Sprite header - see https://smwspeedruns.com/Level_Data_Format#Sprite_Header
@@ -192,7 +192,7 @@ new_sprite_data:\n\
         return true;
     }
 
-    bool meowmeow::exec_meowmeow_ow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data) {
+    bool meowmeow::exec_meowmeow_ow(Rom& rom, std::string tool_folder, std::vector<uint8_t>& new_sprite_data, bool lm351_offset) {
         const int ow_sprite_data = rom.read<3>(OW_SPRITE_DATA_PTR, true);
         int submap_offset[OW_SUBMAPS] = { static_cast<int>(rom.read<2>(ow_sprite_data, true)),
                                         static_cast<int>(rom.read<2>(ow_sprite_data + 2, true)),
@@ -207,7 +207,7 @@ new_sprite_data:\n\
 
         // Prepare ROM data by putting the needle in the first map's data.
         rom.rom_data.clear();
-        rom.rom_data.seekg(snestopc_pick(rom.mapper, ow_sprite_data + submap_offset[0]) + HEADER_SIZE);
+        rom.rom_data.seekg(snestopc_pick(rom.rom_mapper, ow_sprite_data + submap_offset[0]) + HEADER_SIZE);
         while (1)
         {
             // These two are always present: they define a sprite number and its position.
@@ -226,7 +226,7 @@ new_sprite_data:\n\
 
                 // Move to next map's sprite data.
                 rom.rom_data.clear();
-                rom.rom_data.seekg(snestopc_pick(rom.mapper, ow_sprite_data + submap_offset[submaps_processed]) + HEADER_SIZE);
+                rom.rom_data.seekg(snestopc_pick(rom.rom_mapper, ow_sprite_data + submap_offset[submaps_processed]) + HEADER_SIZE);
 
                 // Store the new offset for new map and move on.
                 // The very first map (Main Map in LM) will *always* be 0x000E -- notice this is OW_SUBMAPS*2.
@@ -240,7 +240,7 @@ new_sprite_data:\n\
 
             // Verify if this is a sprite which changed.
             int sprite_number = sprite_xnnnnnnn & 0x7F;
-            int old_extra = rom.old_extra_bytes[sprite_number] - 0x03;
+            int old_extra = rom.old_extra_bytes[sprite_number - !lm351_offset] - 0x03;
             int new_extra = rom.new_extra_bytes[sprite_number - 1] - 0x03;
 
             if (old_extra <= new_extra)

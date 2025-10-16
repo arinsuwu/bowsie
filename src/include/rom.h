@@ -19,7 +19,7 @@ struct Rom
 {
     std::string rom_path;
     std::ifstream rom_data;
-    mappertype mapper=lorom;
+    mappertype rom_mapper=lorom;
     int rom_size;
     char * raw_rom_data;
     char * old_extra_bytes;
@@ -47,7 +47,7 @@ struct Rom
         int shift;
 
         rom_data.clear();
-        rom_data.seekg(snestopc_pick(mapper, addr)+HEADER_SIZE);
+        rom_data.seekg(snestopc_pick(rom_mapper, addr)+HEADER_SIZE);
         for(int i=0;i<bytes;++i)
         {
             shift = little_endian ? i*8 : (bytes-1-i)*8;
