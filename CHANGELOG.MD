@@ -1,3 +1,9 @@
+BOWSIE v1.14
+---
+### Fixes
+- Actually fixed the extra byte table size changes... Oops!
+- Fixed the incorrect mapper type being selected in BOWSIE and meOWmeOW. This was very apparent in 4MB+ SA-1 ROMs, as Lunar Magic can put some data in banks 80+, which the tool was incorrectly assuming as a FastROM mirror. Originally, multiple users (chief amongst them Stivi and simon.caio) had reported this bug to me, but I never understood what was causing it... until now, because I so happened to be making an overworld in a SA-1 ROM myself. Still, thanks to the two of them!
+
 BOWSIE v1.13
 ---
 ### Fixes
