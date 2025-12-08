@@ -1,5 +1,5 @@
 # BOWSIE - Better Overworld Sprite Insertion Engine
-_Version 1.14 by Erik/Arinsu_
+_Version 1.15 by Erik/Arinsu_
 ## Introduction
 I love overworld sprites. I love them ever since I first played the 9th Vanilla Level Design Contest collaboration hack, with its elegant display of how they could be used not only to give more life to a map, but also as a way to have more interaction in the overworld area than just walking around and stuff. I loved them even more when Tob and I collaborated for the Overworld Design contest, and I took care of coding them.  
 I _don't_ love that the only way to use them, for so long, was to either use carol's tool, which, how do I put this delicately, in my opinion is a BS tool 😭😂✌🏾, or have the patch used in VLDC9, with its unintuitive usage as a patch. So I decided to code a tool to streamline the process.  
@@ -10,11 +10,11 @@ I feel like this is what has been holding the widespread adoption of overworld s
 Like _PIXI_ or any other tool for the game, _BOWSIE_ can be used in a headered Super Mario World ROM that has been expanded to at least 1MB, which can be achieved by saving a level in Lunar Magic. Additionally, _BOWSIE_ works out of the box with yoshifanatic's wonderful Overworld Revolution patch.  
 The easiest way to use the tool is to run `bowsie.exe`. Set the path to your ROM and to your list file, and the tool will do everything for you.  
 The list file has basically the same format as _PIXI_. First, a sprite number between 1 and 7F, then the filename of the sprite. One per line. No comments are supported, for now.  
-When you modify your overworld, __you need to rerun _BOWSIE___! Do not forget or else either the sprites won't show or the ROM will crash.
+When you modify your overworld, if you're using a Lunar Magic version prior to 3.60, __you need to rerun _BOWSIE___! Do not forget or else either the sprites won't show or the ROM will crash. This was fixed in Lunar Magic 3.60.
 
 ## Settings
 _BOWSIE_ is designed to be a pretty customizable tool with the intention of being versatile, usable both by hackers who just want to insert any sprites without worry for anything else, by power users who would love to customize the inner workings of the tool and deploy it in various hacks without having to copy the tool, and by anyone in between.  
-BOWSIE has two ways to parse its settings. The first is to pass them as traditional command line arguments, in the form `--<setting_name>=<value>`. The second is via a file named `bowsie_config.json`.  
+BOWSIE has two ways to parse its settings. The first is to pass them as traditional command line arguments, in the form `--<setting_name>=<value>`. The second is via an optional file named `bowsie_config.json`.  
 There are several options, which might seem intimidating at first, but as you'll see here, they're pretty straightforward!
 * `verbose`: this flag determines whether to display extra information about every sprite inserted and action taken within the tool, useful for debugging issues.  
   __Values__: `true` to display said info, `false` otherwise.  

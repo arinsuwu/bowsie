@@ -1,25 +1,25 @@
 /*
  * BOWSIE - Better Overworld Sprite Insertion Engine
  * ---
- * BOWSIE's C++ code is (c) 2024-25 Erik Rios (aka Arinsu)
+ * BOWSIE's C++ code is (c) 2024-25 Erik Rios (aka Arinsu/Ari)
  * licensed under the BSD 2-clause license
  * additional contributions by Atari2.0
  * 
  * 65816 ASM code is due to various authors:
  * - vldc9.asm and its routines originally by Lui, Medic et al. in 2016
- *   modifications done by JackTheSpades in 2018 and Arinsu in 2018, 2024-25
+ *   modifications done by JackTheSpades in 2018 and Ari in 2018, 2024-25
  * - katrina.asm originally by Katrina in 2018 building upon vldc9.asm
- *   modifications done by Arinsu in 2024-25
- * - owrev.asm originally by Arinsu in 2024-25
+ *   modifications done by Ari in 2024-25
+ * - owrev.asm originally by Ari in 2024-25
  *   with some code and pointers by yoshifanatic
  * - MaxTile is (c) 2020-21 Vitor Vilela
  *   LoROM OR variant by yoshifanatic in 2023
- *   BOWSIE LoROM implementation by Arinsu in 2025, builds upon the above two
- * - All other ASM code (eg. macros, non-VLDC routines) is by Arinsu
+ *   BOWSIE LoROM implementation by Ari in 2025, builds upon the above two
+ * - All other ASM code (eg. macros, non-VLDC routines) is by Ari
  * 
  * Asar is (c) 2011 Alcaro, RPG Hacker, trillian/randomdude999 et al.
  * JSON for Modern C++ is (c) 2013 Niels Lohmann et al.
- * meOWmeOW is (c) 2025 Arinsu, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
+ * meOWmeOW is (c) 2025 Ari, named after MeiMei, which is (c) 2019 Akaginite/33953YoShI
 */
 
 #include <filesystem>
@@ -45,7 +45,7 @@
 #include "include/settings.h"
 
 #define VERSION 1
-#define SUBVER 14
+#define SUBVER 15
 
 using ios = std::ios;
 

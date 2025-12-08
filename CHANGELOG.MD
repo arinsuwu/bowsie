@@ -1,3 +1,8 @@
+BOWSIE v1.15
+---
+### Fixes
+- Fixed the VLDC9 system potentially erasing some code used by AddmusicK, causing a crash if you ran BOWSIE in a ROM using said tool. This was a regression issue introduced in BOWSIE v1.10. Thanks to Moltz for reporting this and helping me with figuring out what exactly was causing the crash!
+
 BOWSIE v1.14
 ---
 ### Fixes
