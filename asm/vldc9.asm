@@ -198,6 +198,7 @@ custom_ow_sprite_load_main:
     ADC $00                     ; | offset the next slots adequately
     TAY                         ;/
 .done_extra
+    CLC
     JMP .sprite_load_loop
 
 assert pc() <= $04F6F8|!bank
@@ -208,7 +209,7 @@ if !vldc9_maxtile
     org $04F8A6|!bank
         incsrc "maxtile.asm"
 
-    pad $058000|!bank
+    pad $04FFB1|!bank
 endif
 
 org $04F76E|!bank
