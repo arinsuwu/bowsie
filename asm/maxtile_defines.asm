@@ -84,6 +84,11 @@ else
         !maxtile_opse   = 1
     endif
 
+        !new32x32       = 0
+    if read4($00E2BD) == $32333233 && read2($00E2C2) >= $0200
+        !new32x32       = 1
+    endif
+
     ;   Labels
     maxtile_get_slot                = $04F8A6|!bank
 
@@ -147,7 +152,5 @@ else
 
 endif
 
-
 ;---
-
 

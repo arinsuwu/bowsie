@@ -4,7 +4,7 @@
 ; Acknowledgements:
 ; - SA-1 MaxTile is 2020-21 Vitor Vilela
 ; - OR MaxTile is 2023 yoshifanatic
-; - Hacks to the vanilla draw routines to use MaxTile are 2025 Erik/Arinsu
+; - Hacks to the vanilla draw routines to use MaxTile are 2025-26 Ari
 ;===========================================================================
 
 ; This only inserts under a specific set of conditions.
@@ -230,6 +230,19 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
         BEQ +
         INY
     +
+        if !new32x32
+            CMP.l $03F1|!addr
+            BEQ +
+            INY
+        +   CMP.l $03F5|!addr
+            BEQ +
+            INY
+        +   CMP.l $03FD|!addr
+            BEQ +
+            INY
+        +
+        endif
+
 
         CPY #$00
         BNE +
@@ -253,51 +266,32 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
         PEA.w (bank(draw_player_in_border_hack)<<8)|(bank(!maxtile_oam_buffer))
         PLB
 
-        LDA.l $03F9|!addr
-        CMP #$F0
-        BEQ +
-        STA.w oam_buffer[$00].y_pos,x
-        LDA.l $03F8|!addr
-        STA.w oam_buffer[$00].x_pos,x
-        LDA.l $03FA|!addr
-        STA.w oam_buffer[$00].tile,x
-        LDA.l $03FB|!addr
-        STA.w oam_buffer[$00].props,x
-        LDA.l $049E|!addr
-        STA.w oam_tilesize_buffer[$00].tile_sx,y
-        INX #4
-        INY
-    +
+        macro copy_player_oam_to_buffer(oam_offset)
+            LDA.l ($03E9|!addr)+(<oam_offset>*4)
+            CMP #$F0
+            BEQ ?+
+            STA.w oam_buffer[$00].y_pos,x
+            LDA.l ($03E8|!addr)+(<oam_offset>*4)
+            STA.w oam_buffer[$00].x_pos,x
+            LDA.l ($03EA|!addr)+(<oam_offset>*4)
+            STA.w oam_buffer[$00].tile,x
+            LDA.l ($03EB|!addr)+(<oam_offset>*4)
+            STA.w oam_buffer[$00].props,x
+            LDA.l ($049A|!addr)+<oam_offset>
+            STA.w oam_tilesize_buffer[$00].tile_sx,y
+            INX #4
+            INY
+        ?+
+        endmacro
 
-        LDA.l $03ED|!addr
-        CMP #$F0
-        BEQ +
-        STA.w oam_buffer[$00].y_pos,x
-        LDA.l $03EC|!addr
-        STA.w oam_buffer[$00].x_pos,x
-        LDA.l $03EE|!addr
-        STA.w oam_buffer[$00].tile,x
-        LDA.l $03EF|!addr
-        STA.w oam_buffer[$00].props,x
-        LDA.l $049B|!addr
-        STA.w oam_tilesize_buffer[$00].tile_sx,y
-        INX #4
-        INY
-    +
-
-        LDA.l $03E9|!addr
-        CMP #$F0
-        BEQ +
-        STA.w oam_buffer[$00].y_pos,x
-        LDA.l $03E8|!addr
-        STA.w oam_buffer[$00].x_pos,x
-        LDA.l $03EA|!addr
-        STA.w oam_buffer[$00].tile,x
-        LDA.l $03EB|!addr
-        STA.w oam_buffer[$00].props,x
-        LDA.l $049A|!addr
-        STA.w oam_tilesize_buffer[$00].tile_sx,y
-    +
+        %copy_player_oam_to_buffer(0)
+        %copy_player_oam_to_buffer(1)
+        %copy_player_oam_to_buffer(4)
+        if !new32x32
+            %copy_player_oam_to_buffer(2)
+            %copy_player_oam_to_buffer(3)
+            %copy_player_oam_to_buffer(5)
+        endif
 
         PLB
         SEP #$30
