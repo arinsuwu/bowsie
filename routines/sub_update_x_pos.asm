@@ -24,6 +24,7 @@
     
 .negative
     EOR #$FFFF
+    INC
     BEQ .return
     PHA
     XBA
