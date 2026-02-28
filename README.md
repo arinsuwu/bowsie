@@ -1,5 +1,5 @@
 # BOWSIE - Better Overworld Sprite Insertion Engine
-_Version 1.15 by Erik/Arinsu_
+_Version 1.15 by Arinsu/Ari_
 ## Introduction
 I love overworld sprites. I love them ever since I first played the 9th Vanilla Level Design Contest collaboration hack, with its elegant display of how they could be used not only to give more life to a map, but also as a way to have more interaction in the overworld area than just walking around and stuff. I loved them even more when Tob and I collaborated for the Overworld Design contest, and I took care of coding them.  
 I _don't_ love that the only way to use them, for so long, was to either use carol's tool, which, how do I put this delicately, in my opinion is a BS tool 😭😂✌🏾, or have the patch used in VLDC9, with its unintuitive usage as a patch. So I decided to code a tool to streamline the process.  

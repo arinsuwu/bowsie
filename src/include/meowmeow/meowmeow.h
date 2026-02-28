@@ -1,6 +1,6 @@
 /*
  *  meOWmeOW
- *  (c) 2025 Erik "Arinsu" Rios - eselerik@outlook.com
+ *  (c) 2025 Arinsu (Ari)
 */
 #pragma once
 

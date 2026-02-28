@@ -1,6 +1,6 @@
 ;===================================================
 ; finish_oam_write: Write to size table
-; By Akaginite/33953YoShI, adapted by Erik
+; By Akaginite/33953YoShI, adapted by Ari
 ;
 ; Input:
 ;   16-bit AXY

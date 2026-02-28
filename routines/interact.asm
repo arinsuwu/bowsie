@@ -1,6 +1,6 @@
 ;====================================
 ; A basic interaction routine
-; By Erik, originally for the fish
+; By Ari, originally for the fish
 ; and goomba sprites
 ;====================================
 
