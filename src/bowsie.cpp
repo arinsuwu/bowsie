@@ -45,7 +45,7 @@
 #include "include/settings.h"
 
 #define VERSION 1
-#define SUBVER 15
+#define SUBVER 16
 
 using ios = std::ios;
 

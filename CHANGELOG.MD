@@ -1,3 +1,15 @@
+BOWSIE v1.16
+---
+### Features
+- MaxTile: Added support for Sonikku's 32x32 player patch.
+
+### Fixes
+- Fixed an obscure issue and crash with the Map16 generator where it was reading values which had already been popped out of the vectors containing tile information multiple times. For some reason this had never caused any crashes before, neither in debug nor release builds. In fact, I'm not sure why it suddenly started crashing now. In any case, the previous code was wrong.
+- Fixed a regression issue where the speed routines were doing the sign inversion incorrectly. Thanks to Ramon for noticing this!
+  - This does mean the VLDC9 sprites might slowly go out of bounds though, due to faulty programming.
+- Fixed BOWSIE not assembling on Lunar Magic versions older than 3.51, given the extra bytes size table not being properly disabled. Thanks go to Stivi and CroNo486 for reporting this!
+- Fixed the tool's documentation not crediting Ari. Instead it credited some other guy who died. 🏳️‍⚧️
+
 BOWSIE v1.15
 ---
 ### Fixes
