@@ -54,7 +54,7 @@ bool Map16::deserialize_json(nlohmann::json& json, std::string* err_str)
     }
     
     (*err_str) = status ? "Couldn't find tile(s):\t\t\t\t" : (*err_str).erase((*err_str).size()-2, 2).append("\nCouldn't find key(s):\t\t\t\t");
-    
+
     for(int i=1;i<=no_tiles;++i)
     {
         std::string c = std::format("tile_{}", i);
@@ -254,44 +254,61 @@ int * Map16::write_map16_tiles(std::string* err_string)
     int * map16_numbers = new int [no_tiles] { 0x00 };
     for(int i=0; i<no_tiles; ++i)
     {
-        int pos = get_map16_tile(is_16x16[i] ? 8 : 2);
+        int j = no_tiles-i-1;
+        int pos = get_map16_tile(is_16x16[j] ? 8 : 2);
         if(pos == -1 || pos > MAP16_SIZE-8)
         {
             map16_numbers[i] = -1;
             (*err_string).append(std::format("Not enough map16 space while starting to write a tile. Position is {}", pos));
             return map16_numbers;
         }
-        int tile = tile_num[i];
-        int yxppccct = (y_flip[i]<<7)|(x_flip[i]<<6)|((priority[i]&1)<<5)|((palette[i]%8)<<2)|(second_page[i]);
+
+        int tile = tile_num[j];
+        int yxppccct = (y_flip[j]<<7)|(x_flip[j]<<6)|((priority[j]&1)<<5)|((palette[j]%8)<<2)|(second_page[j]);
         tile_num.pop_back();
         y_flip.pop_back();
         x_flip.pop_back();
         priority.pop_back();
         palette.pop_back();
         second_page.pop_back();
-        if(is_16x16[i])
+        if(is_16x16[j])
         {
             bool tmp;
-            if(x_flip[i] && y_flip[i])
-                tmp = !write_single_map16_tile(tile+0x11, yxppccct, pos) ||\
-                !write_single_map16_tile(tile+0x01, yxppccct, pos+2) ||\
-                !write_single_map16_tile(tile+0x10, yxppccct, pos+4) ||\
-                !write_single_map16_tile(tile, yxppccct, pos+6);
-            else if(x_flip[i])
-                tmp = !write_single_map16_tile(tile+0x01, yxppccct, pos) ||\
-                !write_single_map16_tile(tile+0x11, yxppccct, pos+2) ||\
-                !write_single_map16_tile(tile, yxppccct, pos+4) ||\
-                !write_single_map16_tile(tile+0x10, yxppccct, pos+6);
-            else if(y_flip[i])
-                tmp =!write_single_map16_tile(tile+0x10, yxppccct, pos) ||\
-                !write_single_map16_tile(tile, yxppccct, pos+2) ||\
-                !write_single_map16_tile(tile+0x11, yxppccct, pos+4) ||\
-                !write_single_map16_tile(tile+0x01, yxppccct, pos+6);
-            else
-                tmp = !write_single_map16_tile(tile, yxppccct, pos) ||\
-                !write_single_map16_tile(tile+0x10, yxppccct, pos+2) ||\
-                !write_single_map16_tile(tile+0x01, yxppccct, pos+4) ||\
-                !write_single_map16_tile(tile+0x11, yxppccct, pos+6);
+            switch(yxppccct>>6)
+            {
+                case 3:
+                    tmp = !write_single_map16_tile(tile+0x11, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile+0x01, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile+0x10, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile, yxppccct, pos+6);
+
+                    break;
+
+                case 2:
+                    tmp = !write_single_map16_tile(tile+0x01, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile+0x11, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile+0x10, yxppccct, pos+6);
+
+                    break;
+
+                case 1:
+                    tmp =!write_single_map16_tile(tile+0x10, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile+0x11, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile+0x01, yxppccct, pos+6);
+
+                    break;
+
+                case 0:
+                    tmp = !write_single_map16_tile(tile, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile+0x10, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile+0x01, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile+0x11, yxppccct, pos+6);
+
+                    break;
+            }
+
             if(tmp)
             {
                 map16_numbers[i] = -1;
@@ -337,12 +354,13 @@ bool Map16::write_tooltip(int sprite_number, std::string* err_string)
         str = std::format("{:X}\t12\t", sprite_number);
         for(int i=0;i<no_tiles;)
         {
+            int j = no_tiles-i-1;
             if(map16_numbers[i]==-1)
                 return false;
-            str.append(std::format("{},{},{:X}\t", x_offset[i], y_offset[i], map16_numbers[i]));
+            str.append(std::format("{},{},{:X}\t", x_offset[j], y_offset[j], map16_numbers[j]));
             x_offset.pop_back();
             y_offset.pop_back();
-            if(!is_16x16[i])
+            if(!is_16x16[j])
                 i+=4;
             else
                 ++i;
