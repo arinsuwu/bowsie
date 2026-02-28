@@ -432,8 +432,8 @@ assert pc() <= $04F882|!bank
 
 ;---
 
+freedata
 if !bowsie_lmver > 350
-    freedata
     extra_byte_table:
         if !bowsie_lmver < 360
             db $03              ;   sprite 00 (fixes lm 3.51 bug)
