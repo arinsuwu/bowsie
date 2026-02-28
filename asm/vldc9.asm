@@ -131,75 +131,97 @@ custom_ow_sprite_load_main:
     XBA                         ; | swap bytes:        -------- zzzzz---
     STA $06                     ;/  store z position (in pixel) in $06
 
+    if !bowsie_lmver < 351
+        INY #2                  ;\
+        LDA [$6B],y             ; | get high word or sprite data (____ ____  eeee eeee)
+        STA $08                 ;/  store extra byte to $08 (and garbage data to $09)
+    endif
     PHY
     %spawn_sprite()             ;   attempt to spawn the sprite
-    STY $09
+    if !bowsie_lmver > 350
+        STY $09
+    endif
     PLY
     BCC .end_spawning           ;   return if no more slots where to spawn a sprite at
 
-    INY #2                      ;   move to the extra bytes - carry set becuase spawn succeeded
-    LDX $00
-    if !bowsie_lmver < 360
-        LDA.l extra_byte_table,x
+    if !bowsie_lmver > 350
+        INY #2                  ;   move to the extra bytes - carry set becuase spawn succeeded
+        LDX $00
+        if !bowsie_lmver < 360
+            LDA.l extra_byte_table,x
+        else
+            LDA.l extra_byte_table-1,x
+        endif
+        AND #$00FF              ;\
+        SBC #$0003              ; | if there's no extra bytes (so only three bytes),
+        CLC                     ; | move on
+        BEQ .sprite_load_loop   ;/
+        CMP #$0005              ;\  if there's more than 4 extra bytes,
+        BCS .extra_byte_ptr     ;/  put a pointer instead
+
+    .regular
+        STZ $00
+        STZ $02
+        SEP #$20
+        STA $08
+
+        LDX #$00                ;\
+    -   LDA [$6B],y             ; |
+        STA $00,x               ; | loop through the amount of extra bytes:
+        INY                     ; | extract them in $00-$03
+        INX                     ; | the non-filled values initialize to 00
+        CPX $08                 ; |
+        BCC -                   ;/
+
+        LDX $09                 ;\
+        REP #$21                ; |
+        LDA $00                 ; | store retrieved extra bytes in the extra byte tables
+        STA !ow_sprite_extra_1,x; |
+        LDA $02                 ; |
+        STA !ow_sprite_extra_2,x;/
+
+        BRA .sprite_load_loop
+
+    .end_spawning
+        SEP #$20
+        PLB
+        if !sa1
+            RTL
+        else
+            RTS
+        endif
+
+    .extra_byte_ptr
+        STA $00
+        LDX $09
+        TYA                     ;\
+        CLC                     ; |
+        ADC $6B                 ; |
+        STA !ow_sprite_extra_1,x; | insert pointer to extra bytes:
+        LDA $6D                 ; | now contained in the extra byte tables
+        ADC #$0000              ; |
+        AND #$00FF              ; |
+        STA !ow_sprite_extra_2,x;/
+        TYA                     ;\
+        ADC $00                 ; | offset the next slots adequately
+        TAY                     ;/
+    .done_extra
+        CLC
+        JMP .sprite_load_loop
     else
-        LDA.l extra_byte_table-1,x
+        INY
+        CLC
+        BRA .sprite_load_loop
+
+    .end_spawning
+        SEP #$20
+        PLB
+        if !sa1
+            RTL
+        else
+            RTS
+        endif
     endif
-    AND #$00FF                  ;\
-    SBC #$0003                  ; | if there's no extra bytes (so only three bytes),
-    CLC                         ; | move on
-    BEQ .sprite_load_loop       ;/
-    CMP #$0005                  ;\  if there's more than 4 extra bytes,
-    BCS .extra_byte_ptr         ;/  put a pointer instead
-
-.regular
-    STZ $00
-    STZ $02
-    SEP #$20
-    STA $08
-
-    LDX #$00                    ;\
--   LDA [$6B],y                 ; |
-    STA $00,x                   ; | loop through the amount of extra bytes:
-    INY                         ; | extract them in $00-$03
-    INX                         ; | the non-filled values initialize to 00
-    CPX $08                     ; |
-    BCC -                       ;/
-
-    LDX $09                     ;\
-    REP #$21                    ; |
-    LDA $00                     ; | store retrieved extra bytes in the extra byte tables
-    STA !ow_sprite_extra_1,x    ; |
-    LDA $02                     ; |
-    STA !ow_sprite_extra_2,x    ;/
-
-    BRA .sprite_load_loop
-
-.end_spawning
-    SEP #$20
-    PLB
-    if !sa1
-        RTL
-    else
-        RTS
-    endif
-
-.extra_byte_ptr
-    STA $00
-    LDX $09
-    TYA                         ;\
-    CLC                         ; |
-    ADC $6B                     ; |
-    STA !ow_sprite_extra_1,x    ; | insert pointer to extra bytes:
-    LDA $6D                     ; | now contained in the extra byte tables
-    ADC #$0000                  ; |
-    AND #$00FF                  ; |
-    STA !ow_sprite_extra_2,x    ;/
-    TYA                         ;\
-    ADC $00                     ; | offset the next slots adequately
-    TAY                         ;/
-.done_extra
-    CLC
-    JMP .sprite_load_loop
 
 assert pc() <= $04F6F8|!bank
 

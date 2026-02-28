@@ -42,6 +42,10 @@ endif
     STA !ow_sprite_y_pos,x
     LDA $06
     STA !ow_sprite_z_pos,x
+    if !bowsie_lmver < 351
+        LDA $08
+        STA !ow_sprite_extra_1,x
+    endif
     STZ !ow_sprite_init,x
     STZ !ow_sprite_speed_x,x
     STZ !ow_sprite_speed_x_acc,x
