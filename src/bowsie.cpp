@@ -659,7 +659,9 @@ ow_sprite_main_ptrs:\n\
     }
         
     // Done
-    fmt::println("All sprites inserted successfully!\nRemember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
+    fmt::println("All sprites inserted successfully!");
+    if(lm_ver < 360)
+        fmt::println("Remember to run the tool again when you insert a custom OW sprite in Lunar Magic.");
     map16.done(std::string(rom_name+".s16ov").c_str());
     rom.done(run_meowmeow);
     if(!cleanup(tool_folder))
