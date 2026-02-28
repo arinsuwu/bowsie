@@ -1,7 +1,7 @@
 /*
  * BOWSIE - Better Overworld Sprite Insertion Engine
  * ---
- * BOWSIE's C++ code is (c) 2024-25 Erik Rios (aka Arinsu/Ari)
+ * BOWSIE's C++ code is (c) 2024-25 Arinsu (Ari)
  * licensed under the BSD 2-clause license
  * additional contributions by Atari2.0
  * 
@@ -253,6 +253,10 @@ int main(int argc, char *argv[])
     if((rom.read<3>(0x00FFC0))!=0x535550) // SUP
         exit(error("Title mismatch. Is this ROM headered?"));
     const int lm_ver = 100*(rom.read<1>(0x0FF0B4)&0xF)+10*(rom.read<1>(0x0FF0B4+2)&0xF)+1*(rom.read<1>(0x0FF0B4+3)&0xF);
+
+    // Disable meOWmeOW in old LM ROMs
+    if(lm_ver<351)
+        run_meowmeow = false;
 
     if(verbose)
     {
@@ -533,7 +537,9 @@ namespace {1}\n\
     print \"Sprite {3:0>2X} - {2}\"\n\
     print \"    Init routine inserted at: $\", hex({1}_init)\n\
     print \"    Main routine inserted at: $\", hex({1}_main)\n\
-    print \"    Extra bytes: \", dec(!extra)\n\
+    if !bowsie_lmver > 350\n\
+        print \"    Extra bytes: \", dec(!extra)\n\
+    endif\n\
 namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\""+tool_folder+"sprites/"+sprite_filename+"\"")));
             if(!rom.inline_patch(tool_folder, insert_sprites.c_str()))
                 exit(error("Could not insert sprite {}. Details: {}\n", sprite_filename, asar_geterrors(&asar_errcount)->fullerrdata));
@@ -594,11 +600,11 @@ namespace off\n", method, sprite_labelname, sprite_filename, sprite_number, ("\"
                     std::string e;
                     if(verbose)
                         fmt::println("Parsing tooltip information for {}...", sprite_filename);
-                    nlohmann::json sprite_tooltip = nlohmann::json::parse(ifs, nullptr, false /* disallow_exceptions */);
+                    nlohmann::json sprite_tooltip = nlohmann::json::parse(ifs, nullptr, false);
                     if(sprite_tooltip.is_discarded())
-                        exit(error("A problem occurred while parsing {}. Please ensure the file isn't corrupted and has a valid JSON format.", sprite_tooltip_path));
+                    exit(error("A problem occurred while parsing {}. Please ensure the file isn't corrupted and has a valid JSON format.", sprite_tooltip_path));
                     if(!map16.deserialize_json(sprite_tooltip, &e))
-                        exit(error("A problem occurred while parsing specific tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
+                    exit(error("A problem occurred while parsing specific tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
                     e = "";
                     if(!map16.write_tooltip(sprite_number, &e))
                         exit(error("A problem has ocurred while generating tooltips for {}. Details:\n{}", sprite_tooltip_path, e));
