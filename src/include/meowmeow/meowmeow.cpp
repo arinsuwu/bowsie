@@ -82,7 +82,7 @@ namespace meOWmeOW {
             rom.rom_data.clear();
             rom.rom_data.seekg(snestopc_pick(rom.rom_mapper, (rom.read<2>(LVL_SPRITE_DATA_PTR + (curr_map * 2), true)) | \
                                                          (rom.read<1>(LVL_SPRITE_DATA_PTR_BANK + curr_map) << 16)) + HEADER_SIZE);
-
+            
             // Sprite header - see https://smwspeedruns.com/Level_Data_Format#Sprite_Header
             uint8_t sprite_header = rom.rom_data.get();
             bool exlevel = sprite_header & 0x20;
@@ -100,8 +100,8 @@ namespace meOWmeOW {
                     // FF byte - if this isn't a big level, it's the terminator, we're out
                     if (!exlevel)
                         break;
-
-                    // This is a big level. Next byte being FE is the terminator in this case
+                        
+                        // This is a big level. Next byte being FE is the terminator in this case
                     sprite_XXXXssss = rom.rom_data.get();
                     new_sprite_data.push_back(sprite_XXXXssss);
                     if (sprite_XXXXssss == 0xFE)
@@ -164,7 +164,8 @@ namespace meOWmeOW {
             std::ofstream(tool_folder + "asm/new_sprite_data.bin", ios::binary).write((char*)new_sprite_data.data(), new_sprite_data.size());
 
             // Generate patch per level
-            meowmeow_patch = std::format("if read1($00FFD5) == $23\n\
+            meowmeow_patch = std::format("\
+if read1($00FFD5) == $23\n\
     if read1($00FFD7) == $0D\n\
         fullsa1rom\n\
     else\n\
@@ -185,8 +186,8 @@ new_sprite_data:\n\
 
             if (!rom.inline_patch(tool_folder, meowmeow_patch.c_str()))
                 return false;
-
-            new_sprite_data.clear();
+            
+            new_sprite_data.assign({});
         }
 
         return true;
@@ -270,28 +271,29 @@ new_sprite_data:\n\
         // Save table of corrected sprites
         std::ofstream(tool_folder + "asm/new_sprite_data.bin", ios::binary).write((char*)new_sprite_data.data(), new_sprite_data.size());
 
-        std::string meowmeow_patch = std::format("if read1($00FFD5) == $23\n\
-        if read1($00FFD7) == $0D\n\
-            fullsa1rom\n\
-        else\n\
-            sa1rom\n\
-        endif\n\
+        std::string meowmeow_patch = std::format("\
+if read1($00FFD5) == $23\n\
+    if read1($00FFD7) == $0D\n\
+        fullsa1rom\n\
     else\n\
-        lorom\n\
+        sa1rom\n\
     endif\n\
-    autoclean read3(${0:0>6X})\n\
-    org ${0:0>6X}\n\
-        autoclean dl new_sprite_data\n\n\
-    freedata\n\
-    new_sprite_data:\n\
-        dw ${1:0>4X}\n\
-        dw ${2:0>4X}\n\
-        dw ${3:0>4X}\n\
-        dw ${4:0>4X}\n\
-        dw ${5:0>4X}\n\
-        dw ${6:0>4X}\n\
-        dw ${7:0>4X}\n\n\
-        incbin \"{8}asm/new_sprite_data.bin\"", OW_SPRITE_DATA_PTR, submap_offset[0],
+else\n\
+    lorom\n\
+endif\n\
+autoclean read3(${0:0>6X})\n\
+org ${0:0>6X}\n\
+    autoclean dl new_sprite_data\n\n\
+freedata\n\
+new_sprite_data:\n\
+    dw ${1:0>4X}\n\
+    dw ${2:0>4X}\n\
+    dw ${3:0>4X}\n\
+    dw ${4:0>4X}\n\
+    dw ${5:0>4X}\n\
+    dw ${6:0>4X}\n\
+    dw ${7:0>4X}\n\n\
+    incbin \"{8}asm/new_sprite_data.bin\"", OW_SPRITE_DATA_PTR, submap_offset[0],
             submap_offset[1],
             submap_offset[2],
             submap_offset[3],
