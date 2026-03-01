@@ -21,7 +21,7 @@ bool Rom::open_rom()
     raw_rom_data = new char[MAX_SIZE] { 0x00 };
     first_time = true;
     if(rom_data.seekg(0x07FD5+HEADER_SIZE).get() == 0x23)
-        rom_mapper = (rom_data.seekg(0x07FD5+HEADER_SIZE).get() == 0x0D) ? bigsa1rom : sa1rom;
+        rom_mapper = (rom_data.seekg(0x07FD7+HEADER_SIZE).get() == 0x0D) ? bigsa1rom : sa1rom;
     else
         rom_mapper = lorom;
 
