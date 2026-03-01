@@ -91,9 +91,8 @@ custom_ow_sprite_load_main:
     endif
 
 .main
-    PHB
     LDX $0DB3|!addr             ;\
-    LDA !mario_map,x           ; | submap of current player (times 2) into X for index to offset table.
+    LDA !mario_map,x            ; | submap of current player (times 2) into X for index to offset table.
     ASL                         ; |
     TAY                         ;/
     LDA.l $0EF55D+2             ;\  return if pointer is empty
@@ -105,59 +104,55 @@ custom_ow_sprite_load_main:
     ADC [$6B],y                 ; |
     STA $6B                     ;/
 
-    CLC
-    LDY #$00                    ;   loop counter = 0
-.sprite_load_loop               ;   loop for decoding sprite data and spawning sprite.
-    LDA [$6B],y                 ;\  get first word of sprite data (yyyx xxxx  xnnn nnnn)
-    BEQ .end_spawning           ; | 0x0000 indicates end of data
-    AND #$007F                  ; |
-    STA $00                     ; | mask out n bits (sprite number) and store to $00
-    LDA [$6B],y                 ; |
-    AND #$1F80                  ; | mask out x bits: ---xxxxx x-------
-    XBA                         ; | swap bytes in A: x------- ---xxxXX
-    ASL                         ; |
-    ROL                         ; | rotate left:     -------- --xxxxxx
-    ASL #2                      ; | multiple by 8 because x is in 8x8 blocks, not pixels.
-    STA $02                     ;/  store x position (in pixels) in $02
+    LDY #$00                        ;   loop counter = 0
+.sprite_load_loop                   ;   loop for decoding sprite data and spawning sprite.
+    LDA [$6B],y                     ;\  get first word of sprite data (yyyx xxxx  xnnn nnnn)
+    BEQ .end_spawning               ; | 0x0000 indicates end of data
+    AND #$007F                      ; |
+    STA $00                         ; | mask out n bits (sprite number) and store to $00
+    LDA [$6B],y                     ; |
+    AND #$1F80                      ; | mask out x bits: ---xxxxx x-------
+    LSR #4                          ; | divide by 16:    -------x xxxxx---
+    STA $02                         ;/  store x position (in pixels) in $02
+
     INY
 
-    LDA [$6B],y                 ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
-    AND #$07E0                  ; | mask out y bits:      -----yyy yyy-----
-    LSR #2                      ; | shift y bits down by 2 (same as y multiplied by 8 to get pixels from 8x8)
-    STA $04                     ;/  store y position (in pixel) in $04
+    LDA [$6B],y                     ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
+    AND #$07E0                      ; | mask out y bits:      -----yyy yyy-----
+    LSR #2                          ; | shift y bits down by 2 (same as y multiplied by 8 to get pixels from 8x8)
+    STA $04                         ;/  store y position (in pixel) in $04
 
-    LDA [$6B],y                 ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
-    AND #$F800                  ; | mask out z bits: zzzzz--- --------
-    XBA                         ; | swap bytes:        -------- zzzzz---
-    STA $06                     ;/  store z position (in pixel) in $06
+    LDA [$6B],y                     ;\  get 'middle' word of sprite data (zzzz zyyy  yyyx xxxx)
+    AND #$F800                      ; | mask out z bits: zzzzz--- --------
+    XBA                             ; | swap bytes:      -------- zzzzz---
+    STA $06                         ;/  store z position (in pixel) in $06
 
     if !bowsie_lmver < 351
-        INY #2                  ;\
-        LDA [$6B],y             ; | get high word or sprite data (____ ____  eeee eeee)
-        STA $08                 ;/  store extra byte to $08 (and garbage data to $09)
+        INY #2                      ;\
+        LDA [$6B],y                 ; | get high word or sprite data (____ ____  eeee eeee)
+        STA $08                     ;/  store extra byte to $08 (and garbage data to $09)
     endif
     PHY
-    %spawn_sprite()             ;   attempt to spawn the sprite
+    %spawn_sprite()                 ;   attempt to spawn the sprite
     if !bowsie_lmver > 350
         STY $09
     endif
     PLY
-    BCC .end_spawning           ;   return if no more slots where to spawn a sprite at
+    BCC .end_spawning               ;   return if no more slots where to spawn a sprite at
 
     if !bowsie_lmver > 350
-        INY #2                  ;   move to the extra bytes - carry set becuase spawn succeeded
+        INY #2                      ;   move to the extra bytes - carry set becuase spawn succeeded
         LDX $00
         if !bowsie_lmver < 360
             LDA.l extra_byte_table,x
         else
             LDA.l extra_byte_table-1,x
         endif
-        AND #$00FF              ;\
-        SBC #$0003              ; | if there's no extra bytes (so only three bytes),
-        CLC                     ; | move on
-        BEQ .sprite_load_loop   ;/
-        CMP #$0005              ;\  if there's more than 4 extra bytes,
-        BCS .extra_byte_ptr     ;/  put a pointer instead
+        AND #$00FF                  ;\
+        SBC #$0003                  ; | if there's no extra bytes (so only three bytes), move on
+        BEQ .sprite_load_loop       ;/
+        CMP #$0005                  ;\  if there's more than 4 extra bytes,
+        BCS .extra_byte_ptr         ;/  put a pointer instead
 
     .regular
         STZ $00
@@ -165,26 +160,25 @@ custom_ow_sprite_load_main:
         SEP #$20
         STA $08
 
-        LDX #$00                ;\
-    -   LDA [$6B],y             ; |
-        STA $00,x               ; | loop through the amount of extra bytes:
-        INY                     ; | extract them in $00-$03
-        INX                     ; | the non-filled values initialize to 00
-        CPX $08                 ; |
-        BCC -                   ;/
+        LDX #$00                    ;\
+    -   LDA [$6B],y                 ; |
+        STA $00,x                   ; | loop through the amount of extra bytes:
+        INY                         ; | extract them in $00-$03
+        INX                         ; | the non-filled values initialize to 00
+        CPX $08                     ; |
+        BCC -                       ;/
 
-        LDX $09                 ;\
-        REP #$21                ; |
-        LDA $00                 ; | store retrieved extra bytes in the extra byte tables
-        STA !ow_sprite_extra_1,x; |
-        LDA $02                 ; |
-        STA !ow_sprite_extra_2,x;/
+        LDX $09                     ;\
+        REP #$21                    ; |
+        LDA $00                     ; | store retrieved extra bytes in the extra byte tables
+        STA !ow_sprite_extra_1,x    ; |
+        LDA $02                     ; |
+        STA !ow_sprite_extra_2,x    ;/
 
         BRA .sprite_load_loop
 
     .end_spawning
         SEP #$20
-        PLB
         if !sa1
             RTL
         else
@@ -194,28 +188,25 @@ custom_ow_sprite_load_main:
     .extra_byte_ptr
         STA $00
         LDX $09
-        TYA                     ;\
-        CLC                     ; |
-        ADC $6B                 ; |
-        STA !ow_sprite_extra_1,x; | insert pointer to extra bytes:
-        LDA $6D                 ; | now contained in the extra byte tables
-        ADC #$0000              ; |
-        AND #$00FF              ; |
-        STA !ow_sprite_extra_2,x;/
-        TYA                     ;\
-        ADC $00                 ; | offset the next slots adequately
-        TAY                     ;/
+        TYA                         ;\
+        CLC                         ; |
+        ADC $6B                     ; |
+        STA !ow_sprite_extra_1,x    ; | insert pointer to extra bytes:
+        LDA $6D                     ; | now contained in the extra byte tables
+        ADC #$0000                  ; |
+        AND #$00FF                  ; |
+        STA !ow_sprite_extra_2,x    ;/
+        TYA                         ;\
+        ADC $00                     ; | offset the next slots adequately
+        TAY                         ;/
     .done_extra
-        CLC
         JMP .sprite_load_loop
     else
         INY
-        CLC
         BRA .sprite_load_loop
 
     .end_spawning
         SEP #$20
-        PLB
         if !sa1
             RTL
         else
