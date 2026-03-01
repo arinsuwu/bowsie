@@ -22,8 +22,8 @@ if !bowsie_maxtile
         !oam_buffer            #= $400000
         !oam_tilesize_buffer   #= $400000
     else
-        !oam_buffer            #= $7F9A7B
-        !oam_tilesize_buffer   #= $7F9A7B
+        !oam_buffer            #= $7F0000
+        !oam_tilesize_buffer   #= $7F0000
     endif
 
     !next_oam_slot              = "INY #4"
