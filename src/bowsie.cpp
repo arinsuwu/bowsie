@@ -333,7 +333,7 @@ org ${2:0>6X}\n\
                                            );
         }
         int i=0;
-        while(rom.read<3>(BOWSIE_USED_PTR+7+i)!=0xFFFFFF)
+        while(!(rom.read<3>(BOWSIE_USED_PTR+7+i)==0xFFFFFF || rom.read<3>(BOWSIE_USED_PTR+7+i)==0x000000))
         {
             clean_patch.append(std::format("autoclean ${:0>6X}\norg ${:0>6X}\n    dl $FFFFFF\n", rom.read<3>(BOWSIE_USED_PTR+7+i, true),
                                                                                                BOWSIE_USED_PTR+7+i));
@@ -657,7 +657,7 @@ ow_sprite_main_ptrs:\n\
         if(!meowmeow.execute_meowmeow(rom, tool_folder, new_sprite_data))
             exit(error("Something went wrong while applying meOWmeOW. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
     }
-        
+
     // Done
     fmt::println("All sprites inserted successfully!");
     if(lm_ver < 360)
