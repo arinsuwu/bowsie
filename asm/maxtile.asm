@@ -300,35 +300,37 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
     ;-
 
     ; Lives exchanger
-    draw_lives_exchanger_maxtile:
-        REP #$30
-        LDY #$0002
-        LDA #$0000
-        JSL maxtile_get_slot_main
-        BCC .no_slots
+    if not(!new32x32)
+        draw_lives_exchanger_maxtile:
+            REP #$30
+            LDY #$0002
+            LDA #$0000
+            JSL maxtile_get_slot_main
+            BCC .no_slots
 
-    .slots_gotten
-        LDY !maxtile_oam_buffer_index_1
+        .slots_gotten
+            LDY !maxtile_oam_buffer_index_1
 
-        PEA.w (bank(draw_lives_exchanger)<<8)|(bank(!maxtile_oam_buffer))
-        PLB
+            PEA.w (bank(draw_lives_exchanger)<<8)|(bank(!maxtile_oam_buffer))
+            PLB
 
-        LDA #$7848
-        JMP.w draw_lives_exchanger_do_draw
+            LDA #$7848
+            JMP.w draw_lives_exchanger_do_draw
 
-    .no_slots
-        SEP #$30
-        JMP.w draw_lives_exchanger_dont_draw
+        .no_slots
+            SEP #$30
+            JMP.w draw_lives_exchanger_dont_draw
 
-    draw_lives_exchanger_finish_drawing:
-        PLB
+        draw_lives_exchanger_finish_drawing:
+            PLB
 
-        LDX !maxtile_oam_buffer_index_2
-        STA.l oam_tilesize_buffer[$00].tile_sx,x
-        STA.l oam_tilesize_buffer[$01].tile_sx,x
+            LDX !maxtile_oam_buffer_index_2
+            STA.l oam_tilesize_buffer[$00].tile_sx,x
+            STA.l oam_tilesize_buffer[$01].tile_sx,x
 
-        SEP #$10
-        JMP.w draw_lives_exchanger_dont_draw
+            SEP #$10
+            JMP.w draw_lives_exchanger_dont_draw
+    endif
 
     ;-
 
@@ -567,23 +569,25 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
         ; Lives exchanger
         org $04F56C|!bank
-        draw_lives_exchanger:
-            JMP.w .maxtile
-            BRA $00
-        .do_draw
-            STA.w oam_buffer[$00].x_pos,y
-            skip 3
-            STA.w oam_buffer[$01].x_pos,y
-            skip 3
-            STA.w oam_buffer[$00].tile,y
-            skip 3
-            STA.w oam_buffer[$01].tile,y
-            skip 2
-            skip 2
+        if not(!new32x32)
+            draw_lives_exchanger:
+                JMP.w .maxtile
+                BRA $00
+            .do_draw
+                STA.w oam_buffer[$00].x_pos,y
+                skip 3
+                STA.w oam_buffer[$01].x_pos,y
+                skip 3
+                STA.w oam_buffer[$00].tile,y
+                skip 3
+                STA.w oam_buffer[$01].tile,y
+                skip 2
+                skip 2
 
-            JMP.w .finish_drawing
-            NOP #3
-        .dont_draw
+                JMP.w .finish_drawing
+                NOP #3
+            .dont_draw
+        endif
 
         ; Level reveal sparkle and castle destruction tiles
         org $04EC2E|!bank
@@ -661,13 +665,18 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 STA $8E                                             ;   scratch
             org $048698|!bank
             change_player_draw_order:
-                REP #$20
-                LDA $0DD6|!addr
-                XBA
-                LSR
+                if !new32x32
+                    REP #$30
+                    skip 5
+                else
+                    REP #$20
+                    LDA $0DD6|!addr
+                    XBA
+                    LSR
+                endif
                 EOR #$0200
                 STA $04
-                SEP #$20
+                SEP #$30
 
             .check_draw_player_2
                 LDA !mario_map
@@ -756,8 +765,12 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
             ..dont_offset_pos
                 REP #$30
-                LDA $04
-                EOR #$0200
+                if !new32x32
+                    skip 5
+                else
+                    LDA $04
+                    EOR #$0200
+                endif
                 STA $04
                 JSR $8789
                 LDA $0DD6|!addr
@@ -817,8 +830,12 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 REP #$21
                 LDA $8A
                 STA.l oam_buffer[$00].x_pos,x
-                LDA $87CB,y
-                ADC $04                                             ;   carry clear after REP #$21
+                if !new32x32
+                    skip 5
+                else
+                    LDA $87CB,y
+                    ADC $04                                         ;   carry clear after REP #$21
+                endif
                 STA.l oam_buffer[$00].tile,x
                 SEP #$21
                 JSR.w .tilesize
@@ -895,7 +912,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 LDA $89DE,y
                 CMP #$FFFF
                 BEQ .skip_tile
-                STA $00
+                PHA
                 AND #$0F00
                 CMP #$0200
                 BNE .offset_tile
@@ -903,17 +920,24 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 LDA $0E
                 SBC #$0004                                          ;   BNE branched = carry set
                 TAY
-                LDA $00
+                PLA
                 AND #$F0FF
                 ORA $8CDE,y
+                PHA
                 LDY $08
                 BRA .store_tile
 
             .offset_tile
-                LDA $00
-                CLC
-                ADC $04
+                if !new32x32
+                    skip 4
+                else
+                    PLA
+                    CLC
+                    ADC $04
+                endif
+                PHA
             .store_tile
+                PLA
                 STA.l oam_buffer[$00].tile,x
             .skip_tile
                 JMP.w .end_loop

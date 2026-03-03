@@ -84,8 +84,12 @@ else
         !maxtile_opse   = 1
     endif
 
+    ;   Sonikku's 32x32 player check
         !new32x32       = 0
-    if read4($00E2BD) == $32333233 && read2($00E2C2) >= $0200
+    if read4($00E2BD) == $32333233
+        error "Your variant of the Sonikku 32x32 player patch is old. Please upgrade."
+    endif
+    if read4($00E2D0) == $32333233 && read2($00E2D4) >= $0200
         !new32x32       = 1
     endif
 
