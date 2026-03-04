@@ -433,10 +433,43 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
         draw_player_not_riding_yoshi_tilesize:
             PHX
+            LDX $0DD6|!addr
+            LDA $05,s
+            CMP #$8755
+            BEQ +
+            TXA
+            EOR #$0004
+            TAX
+        +   LDA !mario_x_pos_lo,x
+            SEC
+            SBC $1A
+            PHA
+            LDA $8C
+            LSR
+            PLA
+            BCC +
+            SBC #$0008
+        +   CMP #$0000
+            BPL +
+            CMP #$FFF8
+            BCS .draw_player
+        +   CMP #$0100
+            BCC .draw_player
+            PLX
+            INC $CE
+            SEP #$20
+            LDA #$F0
+            STA.l oam_buffer[$00].y_pos,x
+            INX #4
+            RTS
+
+        .draw_player
             LDX $CE
             INC $CE
             SEP #$20
-            LDA #$00
+            ; carry: contains the high X bit from the comparisons above
+            TDC
+            ROL
             STA.l oam_tilesize_buffer[$00].tile_sx,x
             PLX
             INX #4
@@ -464,13 +497,45 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
         draw_player_riding_yoshi_end_loop:
             PHX
+            LDX $0DD6|!addr
+            LDA $03,s
+            CMP #$8755
+            BEQ +
+            TXA
+            EOR #$0004
+            TAX
+        +   LDA !mario_x_pos_lo,x
+            SEC
+            SBC $1A
+            PHA
+            LDA $8C
+            LSR
+            PLA
+            BCC +
+            SBC #$0008
+        +   CMP #$0000
+            BPL +
+            CMP #$FFF8
+            BCS .draw_player
+        +   CMP #$0100
+            BCC .draw_player
+            PLX
+            INC $CE
+            SEP #$20
+            LDA #$F0
+            STA.l oam_buffer[$00].y_pos,x
+            BRA .common
+
+        .draw_player
             LDX $CE
             INC $CE
             SEP #$20
-            LDA #$00
+            ; carry: contains the high X bit from the comparisons above
+            TDC
+            ROL
             STA.l oam_tilesize_buffer[$00].tile_sx,x
             PLX
-
+        .common
             INX #4
             INY #2
             DEC $8C
@@ -721,8 +786,12 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 AND #$00FF
                 BEQ .draw_player_1
                 LDA $0C
-                CMP #$00F0
+                BPL +
+                CMP #$FFE0
+                BCS ..maybe_draw_player_2
+            +   CMP #$0110
                 BCS .draw_player_1
+            ..maybe_draw_player_2
                 LDA $0E
                 CMP #$00F0
                 BCS .draw_player_1
@@ -809,7 +878,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
 
             .alive
                 LDA $01,s                                           ;\
-                CMP #$874E                                          ; | return at $04874F = current player
+                CMP #$8755                                          ; | return at $048756 = current player
                 BNE .begin_draw                                     ;/
                 LDA $13D9|!addr
                 CMP #$000B
@@ -837,11 +906,11 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                     ADC $04                                         ;   carry clear after REP #$21
                 endif
                 STA.l oam_buffer[$00].tile,x
-                SEP #$21
                 JSR.w .tilesize
                 INY #2
                 LDA $8A
-                ADC #$07                                            ;   add 8, carry set after SEP #$21
+                CLC
+                ADC #$08
                 STA $8A
                 DEC $8C
                 LDA $8C
@@ -876,7 +945,7 @@ if and(and(not(!sa1), not(!bowsie_owrev)), !bowsie_maxtile)
                 TAY
 
                 LDA $01,s                                           ;\
-                CMP #$874E                                          ; | return at $04874F = current player
+                CMP #$8755                                          ; | return at $04874F = current player
                 BNE ..no_star_road                                  ;/
                 LDA $13D9|!addr
                 CMP #$000B
