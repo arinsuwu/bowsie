@@ -285,18 +285,19 @@ int * Map16::write_map16_tiles(std::string* err_string)
                     break;
 
                 case 2:
-                    tmp = !write_single_map16_tile(tile+0x01, yxppccct, pos) ||\
-                    !write_single_map16_tile(tile+0x11, yxppccct, pos+2) ||\
-                    !write_single_map16_tile(tile, yxppccct, pos+4) ||\
-                    !write_single_map16_tile(tile+0x10, yxppccct, pos+6);
+                    tmp = !write_single_map16_tile(tile+0x10, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile+0x11, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile+0x01, yxppccct, pos+6);
 
                     break;
 
                 case 1:
-                    tmp =!write_single_map16_tile(tile+0x10, yxppccct, pos) ||\
-                    !write_single_map16_tile(tile, yxppccct, pos+2) ||\
-                    !write_single_map16_tile(tile+0x11, yxppccct, pos+4) ||\
-                    !write_single_map16_tile(tile+0x01, yxppccct, pos+6);
+                    fmt::println("yuh");
+                    tmp =!write_single_map16_tile(tile+0x01, yxppccct, pos) ||\
+                    !write_single_map16_tile(tile+0x11, yxppccct, pos+2) ||\
+                    !write_single_map16_tile(tile, yxppccct, pos+4) ||\
+                    !write_single_map16_tile(tile+0x10, yxppccct, pos+6);
 
                     break;
 
