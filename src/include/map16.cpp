@@ -293,7 +293,6 @@ int * Map16::write_map16_tiles(std::string* err_string)
                     break;
 
                 case 1:
-                    fmt::println("yuh");
                     tmp =!write_single_map16_tile(tile+0x01, yxppccct, pos) ||\
                     !write_single_map16_tile(tile+0x11, yxppccct, pos+2) ||\
                     !write_single_map16_tile(tile, yxppccct, pos+4) ||\
