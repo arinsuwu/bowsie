@@ -5,6 +5,10 @@
 ;    A contains the amount of tiles to draw,
 ;      minus 1
 ;    Clear carry to ask priority
+; If using MaxTile:
+;    Set the highest bit of A to select a custom
+;      priority buffer
+;    Y contains the buffer to use (00-03)
 ;
 ; Output:
 ;    16-bit X/Y
@@ -54,10 +58,9 @@
 
     else
         PHP
-        BCS +
+        LDY !ow_sprite_oam
+        BCS .start
         LDY !ow_sprite_oam_p
-        BRA .start
-    +   LDY !ow_sprite_oam
     .start
         ASL #2
         STA $04
