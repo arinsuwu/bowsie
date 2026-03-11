@@ -18,6 +18,16 @@
     REP #$10
 
     if !bowsie_maxtile
+        BIT #$8000
+        BEQ .regular
+    .custom_pri
+        AND #$7FFF
+        INC
+        STA $04
+        STY $06
+        BRA .common
+
+    .regular
         INC
         STA $04
         LDA #$0000
@@ -25,6 +35,7 @@
         LDA #$0003
     +   STA $06
 
+    .common
         %sub_offscreen()
         BCS .return
 
