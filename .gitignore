@@ -17,6 +17,7 @@ bowsie-config.json
 *.sfc
 *.s16ov
 *.sscov
+*.dll
 *.exe
 *.res
 *.ifc

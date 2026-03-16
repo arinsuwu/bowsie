@@ -6,10 +6,60 @@
 #include <string>
 #include <cstring>
 
-#include "asar/asar.h"
+#ifdef ASAR_DYNAMIC_LINK
+    #include "asar/asardll.h"
+#else
+    #include "asar/asar.h"
+#endif
 
 #define HEADER_SIZE 512
 #define MAX_SIZE 1024*1024*16
+
+static int sa1banks[8]={0<<20, 1<<20, -1, -1, 2<<20, 3<<20, -1, -1};
+
+static int snestopc_pick(enum mappertype mapper, int addr)
+{
+    if (addr<0 || addr>0xFFFFFF) return -1;
+    if (mapper==lorom)
+    {
+        if ((addr&0xFE0000)==0x7E0000 ||
+            (addr&0x408000)==0x000000 ||
+            (addr&0x708000)==0x700000)
+                return -1;
+        addr=((addr&0x7F0000)>>1|(addr&0x7FFF));
+        return addr;
+    }
+    if (mapper==sa1rom)
+    {
+        if ((addr&0x408000)==0x008000)
+        {
+            return sa1banks[(addr&0xE00000)>>21]|((addr&0x1F0000)>>1)|(addr&0x007FFF);
+        }
+        if ((addr&0xC00000)==0xC00000)
+        {
+            return sa1banks[((addr&0x100000)>>20)|((addr&0x200000)>>19)]|(addr&0x0FFFFF);
+        }
+        return -1;
+    }
+    if (mapper==bigsa1rom)
+    {
+        if ((addr&0xC00000)==0xC00000)
+        {
+            return (addr&0x3FFFFF)|0x400000;
+        }
+        if ((addr&0xC00000)==0x000000 || (addr&0xC00000)==0x800000)
+        {
+            if ((addr&0x008000)==0x000000) return -1;
+            return (addr&0x800000)>>2 | (addr&0x3F0000)>>1 | (addr&0x7FFF);
+        }
+        return -1;
+    }
+    if (mapper==norom)
+    {
+        return addr;
+    }
+    return -1;
+}
 
 /*
     struct Rom: SMW ROM data
@@ -61,4 +111,3 @@ struct Rom
         return read<bytes>(addr, false);
     }
 };
-

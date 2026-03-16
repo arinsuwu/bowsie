@@ -12,7 +12,11 @@
 
 #include <fmt/base.h>
 
-#include "../asar/asar.h"
+#ifdef ASAR_DYNAMIC_LINK
+    #include "../asar/asardll.h"
+#else
+    #include "../asar/asar.h"
+#endif
 
 #include "../misc.h"
 #include "../rom.h"

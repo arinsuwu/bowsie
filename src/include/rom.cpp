@@ -87,3 +87,4 @@ bool Rom::inline_patch(std::string tool_folder, const char * patch_content)
         first_time = false;
     return patch_res;
 }
+

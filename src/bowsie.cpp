@@ -34,7 +34,11 @@
 
 #include <fmt/base.h>
 
-#include "include/asar/asar.h"
+#ifdef ASAR_DYNAMIC_LINK
+    #include "include/asar/asardll.h"
+#else
+    #include "include/asar/asar.h"
+#endif
 #include <nlohmann/json.hpp>
 
 #include "include/meowmeow/meowmeow.h"
@@ -45,7 +49,7 @@
 #include "include/settings.h"
 
 #define VERSION 1
-#define SUBVER 16
+#define SUBVER 20
 
 using ios = std::ios;
 
@@ -53,6 +57,7 @@ namespace fs = std::filesystem;
 
 // Constants
 #define BOWSIE_USED_PTR 0x04EF3E        // must be freespace in bank 4
+#define BOWSIE_USED_PTR_OR 0x04FC00     // must be freespace in OR bank 4
 #define MAGIC_CONSTANT 0x00CAC705       // 00cactus - refer to FE!N by Jacques Webster and Jordan Carter
 #define MAGIC_CONSTANT_WRITE ((MAGIC_CONSTANT&0xFF)<<24)|((MAGIC_CONSTANT&0xFF00)<<8)|((MAGIC_CONSTANT&0xFF0000)>>8)|((MAGIC_CONSTANT&0xFF000000)>>24)
 
@@ -64,6 +69,14 @@ int main(int argc, char *argv[])
     fmt::println("BOWSIE - Better Overworld Sprite Insertion Engine");
     fmt::println("\t v{}.{:0>2}", VERSION, SUBVER);
     fmt::println("\t By Arinsu\n");
+
+    #ifdef ASAR_DYNAMIC_LINK
+        const bool asar_dll = true;
+        if(!asar_init())
+            exit(error("Couldn't initialize Asar DLL. Make sure asar.dll is in the same directory as BOWSIE."));
+    #else
+        const bool asar_dll = false;
+    #endif
 
     Rom rom;
 
@@ -226,6 +239,7 @@ int main(int argc, char *argv[])
         method = custom_method_name=="" ? "vldc9" : "custom";
         slots = slots == -1 ? 24 : slots;
     }
+    const int bowsie_ptr = ow_rev ? BOWSIE_USED_PTR_OR : BOWSIE_USED_PTR;
 
     /*
         Verify settings
@@ -262,15 +276,16 @@ int main(int argc, char *argv[])
     {
         fmt::println("\nVerbose mode enabled.");
         fmt::println("Running BOWSIE with");
-        fmt::println("Slots:\t\t\t\t{}", slots);
-        fmt::println("Insertion method:\t\t{} {}", method, method=="custom" ? "("+custom_method_name+")" : "");
-        fmt::println("MaxTile:\t\t\t{}", use_maxtile ? "Enabled" : "Disabled");
-        fmt::println("meOWmeOW:\t\t\t{}", run_meowmeow ? "Enabled" : "Disabled");
-        fmt::println("RAM checks:\t\t\t{}", bypass_ram_check ? "Ignored (!)" : "Enabled");
-        fmt::println("Asar version: v{}.{}{}", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
+        fmt::println("Slots:\t\t\t{}", slots);
+        fmt::println("Insertion method:\t{} {}", method, method=="custom" ? "("+custom_method_name+")" : "");
+        fmt::println("MaxTile:\t\t{}", use_maxtile ? "Enabled" : "Disabled");
+        fmt::println("meOWmeOW:\t\t{}", run_meowmeow ? "Enabled" : "Disabled");
+        fmt::println("RAM checks:\t\t{}", bypass_ram_check ? "Ignored (!)" : "Enabled");
+        fmt::println("Asar version:\t\tv{}.{}{}", (int)(((asar_version()%100000)-(asar_version()%1000))/10000),
                                                  (int)(((asar_version()%1000)-(asar_version()%10))/100),
                                                  (int)(asar_version()%10));
-        fmt::println("Lunar Magic version: {}.{}\n", (int)(lm_ver/100), lm_ver%100);
+        fmt::println("Asar library:\t\t{}", asar_dll ? "Dynamic" : "Static");
+        fmt::println("Lunar Magic version:\t{}.{}\n", (int)(lm_ver/100), lm_ver%100);
     }
     else
         fmt::println("");
@@ -285,7 +300,7 @@ incsrc \"{1}asm/macro.asm\"\n\
 incsrc \"{1}asm/maxtile_defines.asm\"\n\
 org ${2:0>6X}\n\
     dd ${3:0>8X}\n\
-    dl ow_sprite_init_ptrs\n\n", method, tool_folder, BOWSIE_USED_PTR, MAGIC_CONSTANT_WRITE));
+    dl ow_sprite_init_ptrs\n\n", method, tool_folder, bowsie_ptr, MAGIC_CONSTANT_WRITE));
     {
         std::string tmp;
         // Insert the method
@@ -317,7 +332,7 @@ org ${2:0>6X}\n\
 
     // Figure out whether the tool's been used and clean-up if so
     // In theory this new code can also clean up the older one...
-    if( (rom.read<2>(BOWSIE_USED_PTR)==(MAGIC_CONSTANT&0xFFFF0000)>>16) && (rom.read<2>(BOWSIE_USED_PTR+2)==(MAGIC_CONSTANT&0xFFFF)) )
+    if( (rom.read<2>(bowsie_ptr)==(MAGIC_CONSTANT&0xFFFF0000)>>16) && (rom.read<2>(bowsie_ptr+2)==(MAGIC_CONSTANT&0xFFFF)) )
     {
         if(verbose)
             fmt::println("Performing clean-up of a previous execution...");
@@ -325,7 +340,7 @@ org ${2:0>6X}\n\
             exit(error("Error cleaning up existing Map16 files. Exiting..."));
 
         std::string clean_patch;
-        int old_sprite_ptrs = rom.read<3>(BOWSIE_USED_PTR+4, true);
+        int old_sprite_ptrs = rom.read<3>(bowsie_ptr+4, true);
         for(int i=0; i<0x7E; ++i)
         {
             clean_patch.append(std::format("autoclean ${:0>6X}\nautoclean ${:0>6X}\n", rom.read<3>( old_sprite_ptrs+(i*3), true ),
@@ -333,17 +348,20 @@ org ${2:0>6X}\n\
                                            );
         }
         int i=0;
-        while(!(rom.read<3>(BOWSIE_USED_PTR+7+i)==0xFFFFFF || rom.read<3>(BOWSIE_USED_PTR+7+i)==0x000000))
+        while(!(rom.read<3>(bowsie_ptr+7+i)==0xFFFFFF || rom.read<3>(bowsie_ptr+7+i)==0x000000))
         {
-            clean_patch.append(std::format("autoclean ${:0>6X}\norg ${:0>6X}\n    dl $FFFFFF\n", rom.read<3>(BOWSIE_USED_PTR+7+i, true),
-                                                                                               BOWSIE_USED_PTR+7+i));
+            clean_patch.append(std::format("autoclean ${:0>6X}\norg ${:0>6X}\n    dl $FFFFFF\n", rom.read<3>(bowsie_ptr+7+i, true),
+                                                                                               bowsie_ptr+7+i));
             i+=3;
         }
+
+        clean_patch.append(std::format("\nautoclean ${:0>6X}\n", old_sprite_ptrs));
+
         if(ow_rev)
             if(rom.read<1>(OWREV_HANDLER_PTR)==0x20)
                 {
                     clean_patch.append(std::format("\norg $04{:0>4X}\n    padbyte $00 : pad ${:0>6X}",
-                                              rom.read<2>(OWREV_LOAD_HACK_PTR+1, true), BOWSIE_USED_PTR));
+                                              rom.read<2>(OWREV_LOAD_HACK_PTR+1, true), bowsie_ptr));
                 }
         if(!rom.inline_patch(tool_folder, clean_patch.c_str()))
             exit(error("An error ocurred while cleaning up. Details:\n  {}", asar_geterrors(&asar_errcount)->fullerrdata));
@@ -391,26 +409,6 @@ dpbase !dp\n\n\
 optimize address mirrors\n\
 bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxtile ? '1' : '0', lm_ver));
 
-    /*
-        These loops locate where certain code is inserted by Overworld Revolution.
-        Since the patch has many variables, these hijack spots are NEVER fixed.
-    */
-    if(ow_rev)
-    {
-        // Freespace
-        for(int i=0;;++i)
-        {
-            if(rom.read<4>(0x04ACD0+i)==0x00000000 && rom.read<4>(0x04ACD0+i+4)==0x00000000)
-            {
-                defines.append(std::format("!owrev_bank_4_freespace = ${:0>6X}\n", 0x04ACD0+i));
-                if(verbose)
-                    fmt::println("Using OW Revolution bank 4 freespace located at ${:0>6X}\n", 0x04ACD0+i);
-                break;
-            }
-            if(0x04ACD0+i>=BOWSIE_USED_PTR)
-                exit(error("Found no OW Revolution freespace in bank 4."));
-        }
-    }
     std::ofstream(tool_folder+"asm/bowsie_defines.asm").write(defines.c_str(), defines.size());
 
     // Shared sub-routines
@@ -442,7 +440,7 @@ bank auto\n\n", slots, VERSION, SUBVER, method=="katrina" ? '1' : '0', use_maxti
             std::string routine_addr(routine_print[i]);
             routine_addr = std::string(routine_addr.begin()+routine_addr.find_first_of("$"), routine_addr.end());
             routine_macro.append(std::format("macro {}()\n    JSL {}\nendmacro\n\n", routine_names[i], routine_addr));
-            routine_content.append(std::format("org ${:0>6X}\n    dl {}\n", BOWSIE_USED_PTR+7+(i*3), routine_addr));
+            routine_content.append(std::format("org ${:0>6X}\n    dl {}\n", bowsie_ptr+7+(i*3), routine_addr));
             if(verbose)
             {
                 fmt::println("{}", routine_print[i]);
