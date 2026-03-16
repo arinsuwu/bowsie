@@ -1,7 +1,37 @@
+BOWSIE v1.20
+---
+### Features
+#### Overworld Revolution
+- BOWSIE no longer sets the "Alternate sprite system" bit, as Overworld Revolution can now detect an alternate system on its own.
+- Now a OR ROM won't crash after reapplying said patch when BOWSIE is in use.
+- Made the freespace BOWSIE requires a fixed position: `$04F800` for the code and `$04FC00` for its signature and pointers. In comparison, VLDC9 places its code for the regular overworld at `$04F625` and `$04EF3E` respectively.
+
+#### MaxTile
+- Added support for the dynamic OW player when using Sonikku's 32x32 player patch.
+  - When using said patch, BOWSIE now requires the latest version to be inserted, otherwise the tool will *not* insert.
+- Added a setting to select a custom priority buffer at `%get_draw_info()`, by setting the highest bit in A next to the number of tiles, i.e.,
+
+```
+    LDA #$8xxx
+    LDY #$<priority>
+    %get_draw_info()
+```  
+
+#### BOWSIE
+- BOWSIE can now use a dynamically linked Asar library, for further compatibility with Callisto.
+- Given how outdated it is, BOWSIE now ships without the contiguous table `katrina.asm` system.
+
+### Fixes
+- Fixed BOWSIE not cleaning up correctly when using Overworld Revolution, causing freespace leaks and, in the worst case, the tool to get stuck.
+- Fixed the incorrect mapper type being selected in large SA-1 ROMs. This noticeably caused BOWSIE to completely crash when running meOWmeOW. Thanks to Mario90 for reporting this and helping me test the fix! Embarrassing to say, it was a typo error...
+- Fixed a math issue dating from the old PIXI implementation days, where sprites were sometimes misaligned by 4 pixels in the X axis. This had been reported by everyone and their mother, but, special thanks to CroNo486 for helping me confirm it is fully gone now!
+- Fixed the overworld player sprite wrapping incorrectly in maps which used the Widescreen Overworld patch. Thanks to CroNo486 for noticing this!
+- Fixed a regression issue with the Map16 tooltip generator were the X flip-only and Y flip-only cases were swapped. Thanks to CroNo486 for reporting this!
+
 BOWSIE v1.16
 ---
 ### Features
-- MaxTile: Added support for Sonikku's 32x32 player patch.
+- MaxTile: Added preliminary support for Sonikku's 32x32 player patch.
 
 ### Fixes
 - Fixed an obscure issue and crash with the Map16 generator where it was reading values which had already been popped out of the vectors containing tile information multiple times. For some reason this had never caused any crashes before, neither in debug nor release builds. In fact, I'm not sure why it suddenly started crashing now. In any case, the previous code was wrong.
@@ -48,7 +78,7 @@ BOWSIE v1.10
 ### Features
 Due to the sheer amount of changes, the regular changelog is now broken down in subsections of each change, instead of per overworld system.  
 
-___Extra bytes and meOWmeOW___
+#### Extra bytes and meOWmeOW
 - Added support for arbitrarily sized extra bytes, which you may know from level sprites as the "Extension" field. Thanks to FuSoYa for adding this feature to Lunar Magic!
   - This feature needs Lunar Magic 3.51 or newer to work.
     - Note that LM 3.51 has a bug where sprite ID 00 is considered valid in the extra bytes table, so therefore BOWSIE code is currently shifted to keep this phantom sprite in mind. This is subject to change once FuSoYa fixes that, so sprite ID 00 is still unusable.
@@ -60,7 +90,7 @@ ___Extra bytes and meOWmeOW___
   - Added the `meowmeow` setting, which allows you to enable or disable *meOWmeOW* if so desired.
   - *meOWmeOW* also works with OW Revolution. Remember that it expects sprites with extra bit set to 1 and sprite numbers `01-7F`.
 
-___MaxTile___
+#### MaxTile
 - Added suport for SA-1 *MaxTile*.
 - Added support for OW Revolution's *MaxTile*.
 - Added support for a custom version (henceforth referred to as the *BOWSIE implementation*) of *MaxTile*, which implements said OAM slot allocation system, and rewrites the border player, the sprite border surrounding said player, the overworld player sprite, and the lives exchanger, to use the BOWSIE implementation.
@@ -73,17 +103,17 @@ ___MaxTile___
   - The BOWSIE implementation *cannot* be disabled once installed!
 - Note that *MaxTile* graphics routines move OAM slots with `INY`, *not* `DEY`!
 
-___Shared subroutine improvements___
+#### Shared subroutine improvements
 - Added `%finish_oam_write()`, an adaptation of Akaginite's routine to set tile sizes and the X position high byte in the OAM size table. While normally this isn't necessary, due to the side border, using this routine fixes the odd quirks of sprites disappearing when using Medic's Widescreen Overworld patch.
 - Added `%erase_sprite()`. In it's simplest form, it just sets a sprite number to zero, but when using OW Revolution, it also marks the sprite to be reloaded correctly.
 - `%sub_horz_pos()` and `%sub_vert_pos()` now store the distance between player and sprite in scratch RAM `$0E`.
 - `%sub_offscreen()` now has more tolerance in how far off screen a sprite can be before despawning. This is more noticeable for big OW Revolution maps.
 
-___Macros___
+#### Macros
 - Added three helper macros for hybrid *MaxTile* and regular graphics routines: `%maxtile_set_databank()`, which preserves and sets the data bank to the bank of the OAM buffer; `%maxtile_clear_databank()`, which restores the data bank, and `%maxtile_get_tilesize_index()`, which loads the index for the high table in Y. The former two do nothing when MaxTile is disabled. The latter uses the internal pointer to the tilesize table when MaxTile is enabled, and a traditional right shift by two when disabled.
 - Split the shadow macros between those which write to the OAM size table and those which don't, intended for use with `%finish_oam_write()`.
 
-___New labels and definitions___
+#### New labels and definitions
 - In addition to regular `!ow_sprite_*` defines for tables, you can now use `ow_sprite_*` *labels* for tables. Not only are they there in case you prefer the latter: they are intended for hybrid graphics routines, so Asar's label parser assigns the adequate size.
 - Added `oam_buffer` and `oam_tilesize_buffer` structs, intended for graphics routines.
   - `oam_buffer` includes four labels: `x_pos`, `y_pos`, `tile` and `props`.
@@ -94,18 +124,18 @@ ___New labels and definitions___
 - Added a `maxtile_get_slot` label, to jump to the subroutine to acquire OAM slots using *MaxTile*, when you don't want to use `%get_draw_info()`.
 - The macros above mentioned include `bank` statements so Asar's label parser can optimize as necessary. This is especially required to not abuse size indicators in hybrid graphics routines.
 
-___Lunar Magic___
+#### Lunar Magic
 - BOWSIE now sets a bit that indicates Lunar Magic to stop overwriting code in the `$04F625`-`$04F6F8` and `$04F8A6`-`$058000` areas. This will allow you to finally save the overworld without having to re-run BOWSIE!
   - Note that this feature is not yet available as of Lunar Magic 3.51 and is awaiting a future release.
 
-___OW Revolution___
+#### OW Revolution
 - Added a missing table, `!ow_sprite_load_index`, which is the equivalent to level sprites' `!161A`: the index to the table used to determine whether a sprite should respawn.
 - Sprites now show when entering the overworld in fade-ins.
 
-___Contiguous table/Katrina's sprite system___
+#### Contiguous table/Katrina's sprite system
 - This system has been "unofficialized". BOWSIE still ships with `katrina`, but now you have to set the `custom_method_name` setting to `katrina` to use it.
 
-___BOWSIE___
+#### BOWSIE
 - The codebase of BOWSIE suffered several changes.
   - BOWSIE now includes CMake lists: from now on, all releases will be built using CMake with Clang as the default compiler and Ninja as the generator. Check the readme for more details.
   - The main branch of BOWSIE can now be compiled with C++20. A branch planned for the future still uses modules.
@@ -121,7 +151,7 @@ ___BOWSIE___
 - Added support for 6 and 8MB SA-1 ROMs.
 - BOWSIE now enables aggressive direct page (`optimize dp always` with `dpbase` set to the `!dp` define) and address size (`optimize address mirrors`) optimization by default.
 
-___Deprecated features___
+#### Deprecated features
 - Removed the support for the vanilla sprite system, in anticipation of yoshifanatic's disassemblies. Please use those instead, they don't have the odd restriction the vanilla sprites have either way.
   - `omtre_detect` was also removed as a consequence, as everything fits in vanilla freespace now!
 
