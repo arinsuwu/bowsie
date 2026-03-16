@@ -1,5 +1,6 @@
 ;===========================================================
 ; Custom Overworld Sprites
+; Current version by Ari
 ;---------------------------
 ; This couldn't be done without resources/stuff made by:
 ; - Lui37, Medic et al.: original "custom ow sprites"

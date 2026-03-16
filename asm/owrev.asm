@@ -1,7 +1,7 @@
 ;===========================================================
-; Custom Overworld Sprites: Lui's sprites on OW Revolution
-;---------------------------
+; Custom Overworld Sprites: VLDC9 sprites on OW Revolution
 ; Adapted by Ari
+;---------------------------
 ; This couldn't be done without resources/stuff made by:
 ; - Lui37, Medic et al.: original "custom ow sprites"
 ;   used in the ninth VLDC.
@@ -28,11 +28,6 @@ org $0480F2
 
 ;---
 
-org $0480D2                         ;   mark custom sprite system in use (just to be safe)
-    db read1($0480D2)|$08
-
-;---
-
 if read1($0EF30F) == $42
     org read3($0EF30C)+256          ;   insert extra size table
     extra_byte_table:
@@ -43,7 +38,7 @@ endif
 
 ;---
 
-org !owrev_bank_4_freespace|!bank   ;   as I said above, right now we can afford bank 4 freespace
+org $04F800|!bank
 ; Sprite loader
 custom_ow_sprite_load:
 ; this part is basically OWRev
@@ -354,9 +349,9 @@ spawn_overworld_sprite:
     STZ !ow_sprite_misc_3,x
     STZ !ow_sprite_misc_4,x
     STZ !ow_sprite_misc_5,x
-	SEP.b #$20
-	LDA.b #$FF
-	STA.w !ow_sprite_load_index,x
+	SEP #$20
+	LDA #$FF
+	STA !ow_sprite_load_index,x
 
     PLP
     PLY
@@ -366,5 +361,7 @@ spawn_overworld_sprite:
 
 ;---
 
-assert pc() <= $04EF3E|!bank
+assert pc() <= $04FC00|!bank
+
+freedata cleaned
 
