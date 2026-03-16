@@ -1,12 +1,9 @@
 #pragma once
-
 #ifndef ASAR_SHARED
 #define expectedapiversion 303
 
 #include <stdbool.h>
 #include <stddef.h> // for size_t
-
-static int sa1banks[8]={0<<20, 1<<20, -1, -1, 2<<20, 3<<20, -1, -1};
 
 //These structures are returned from various functions.
 struct errordata {
@@ -110,95 +107,6 @@ struct patchparams
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-	#undef snestopc
-	#undef snestopc_pick
-    static int snestopc_pick(mappertype mapper, int addr)
-    {
-		if (addr<0 || addr>0xFFFFFF) return -1;//not 24bit
-		if (mapper==lorom)
-		{
-			// randomdude999: The low pages ($0000-$7FFF) of banks 70-7D are used
-			// for SRAM, the high pages are available for ROM data though
-			if ((addr&0xFE0000)==0x7E0000 ||//wram
-				(addr&0x408000)==0x000000 ||//hardware regs, ram mirrors, other strange junk
-				(addr&0x708000)==0x700000)//sram (low parts of banks 70-7D)
-					return -1;
-			addr=((addr&0x7F0000)>>1|(addr&0x7FFF));
-			return addr;
-		}
-		if (mapper==hirom)
-		{
-			if ((addr&0xFE0000)==0x7E0000 ||//wram
-				(addr&0x408000)==0x000000)//hardware regs, ram mirrors, other strange junk
-					return -1;
-			return addr&0x3FFFFF;
-		}
-		if (mapper==exlorom)
-		{
-			if ((addr&0xF00000)==0x700000 ||//wram, sram
-				(addr&0x408000)==0x000000)//area that shouldn't be used in lorom
-					return -1;
-			if (addr&0x800000)
-			{
-				addr=((addr&0x7F0000)>>1|(addr&0x7FFF));
-			}
-			else
-			{
-				addr=((addr&0x7F0000)>>1|(addr&0x7FFF))+0x400000;
-			}
-			return addr;
-		}
-		if (mapper==exhirom)
-		{
-			if ((addr&0xFE0000)==0x7E0000 ||//wram
-				(addr&0x408000)==0x000000)//hardware regs, ram mirrors, other strange junk
-				return -1;
-			if ((addr&0x800000)==0x000000) return (addr&0x3FFFFF)|0x400000;
-			return addr&0x3FFFFF;
-		}
-		if (mapper==sfxrom)
-		{
-			// Asar emulates GSU1, because apparently emulators don't support the extra ROM data from GSU2
-			if ((addr&0x600000)==0x600000 ||//wram, sram, open bus
-				(addr&0x408000)==0x000000 ||//hardware regs, ram mirrors, rom mirrors, other strange junk
-				(addr&0x800000)==0x800000)//fastrom isn't valid either in superfx
-					return -1;
-			if (addr&0x400000) return addr&0x3FFFFF;
-			else return (addr&0x7F0000)>>1|(addr&0x7FFF);
-		}
-		if (mapper==sa1rom)
-		{
-			if ((addr&0x408000)==0x008000)
-			{
-				return sa1banks[(addr&0xE00000)>>21]|((addr&0x1F0000)>>1)|(addr&0x007FFF);
-			}
-			if ((addr&0xC00000)==0xC00000)
-			{
-				return sa1banks[((addr&0x100000)>>20)|((addr&0x200000)>>19)]|(addr&0x0FFFFF);
-			}
-			return -1;
-		}
-		if (mapper==bigsa1rom)
-		{
-			if ((addr&0xC00000)==0xC00000)//hirom
-			{
-				return (addr&0x3FFFFF)|0x400000;
-			}
-			if ((addr&0xC00000)==0x000000 || (addr&0xC00000)==0x800000)//lorom
-			{
-				if ((addr&0x008000)==0x000000) return -1;
-				return (addr&0x800000)>>2 | (addr&0x3F0000)>>1 | (addr&0x7FFF);
-			}
-			return -1;
-		}
-		if (mapper==norom)
-		{
-			return addr;
-		}
-		return -1;
-    }
-
 	//Returns the version, in the format major*10000+minor*100+bugfix*1. This means that 1.2.34 would be
 	// returned as 10234.
 	int asar_version(void);
@@ -276,4 +184,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif 
